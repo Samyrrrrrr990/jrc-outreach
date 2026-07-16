@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.log
+
+# Secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+service-account.json
+*service-account*.json
+*.pem
+credentials*.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
