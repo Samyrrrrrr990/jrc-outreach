@@ -44,7 +44,7 @@ export function merge(template: string, vars: MergeVars): string {
   return out;
 }
 
-const TEMPLATE_DIR = fileURLToPath(new URL("../../templates/", import.meta.url));
+export const TEMPLATE_DIR = fileURLToPath(new URL("../../templates/", import.meta.url));
 
 /** Load a template file from /templates by basename. */
 export function loadTemplate(basename: string): string {

@@ -17,7 +17,8 @@ import { categoryConfig } from "../config/campaign";
 import { proofPointsReady } from "../config/proofPoints";
 import { log, setLogPhase } from "../core/logger";
 import { withRetry } from "../core/retry";
-import { loadTemplate, render, varsFor } from "../mail/templates";
+import { TEMPLATE_DIR, loadTemplate, render, varsFor } from "../mail/templates";
+import { listVariantIds, templateForVariant } from "../mail/variants";
 import { looksLikeEmail } from "../scrape/email";
 import { isAllowed } from "../scrape/robots";
 
@@ -132,7 +133,10 @@ function checkTemplates(): string[] {
   };
   for (const cat of CATEGORIES) {
     const cfg = categoryConfig(cat);
-    for (const file of [cfg.initialTemplate, cfg.followUpTemplate]) {
+    const variantFiles = listVariantIds(TEMPLATE_DIR, cfg.initialTemplate).map((id) =>
+      templateForVariant(cfg.initialTemplate, id),
+    );
+    for (const file of [cfg.initialTemplate, cfg.followUpTemplate, ...variantFiles]) {
       try {
         render(loadTemplate(file), varsFor(sample, { name: "Sender", email: "s@example.org" }));
       } catch (err) {

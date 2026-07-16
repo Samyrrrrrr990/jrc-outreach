@@ -207,6 +207,22 @@ will ever touch that row again.
 
 ---
 
+## A/B variants (learning what works)
+
+Add a subject/opening variant by dropping a file next to the base template:
+`templates/profs.initial.variant-b.md` (id = lowercase letters/digits/hyphens).
+Each initial send picks uniformly at random among control + variants and
+records the id in the row's `variant` column. The single follow-up threads
+under the *variant's* subject so the pair reads as one conversation.
+
+`npx tsx src/cli.ts weekly-report` (the Monday `weekly-report.yml` workflow
+emails it via your own SMTP) summarises the week and compares variants with a
+two-proportion z-test — it refuses to call a winner under 20 sends per
+variant. **It informs only**: adopting a winner is always a manual edit to
+`/templates`; nothing ever switches automatically.
+
+---
+
 ## Analytics & dashboard
 
 `npx tsx src/cli.ts build-dashboard` reads the Sheet and writes a fully

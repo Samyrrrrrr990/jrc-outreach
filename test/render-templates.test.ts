@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { CAMPAIGN } from "../src/config/campaign";
-import { loadTemplate, render, varsFor } from "../src/mail/templates";
+import { TEMPLATE_DIR, loadTemplate, render, varsFor } from "../src/mail/templates";
+import { listVariantIds, templateForVariant } from "../src/mail/variants";
 import type { Contact } from "../src/core/types";
 
 /** A fully-populated proof-points override (as if the user filled them in). */
@@ -30,9 +31,13 @@ const contact: Contact = {
   notes: "",
 };
 
+// Base templates plus every discovered A/B variant file.
 const templates = Object.values(CAMPAIGN.categories).flatMap((c) => [
   c.initialTemplate,
   c.followUpTemplate,
+  ...listVariantIds(TEMPLATE_DIR, c.initialTemplate).map((id) =>
+    templateForVariant(c.initialTemplate, id),
+  ),
 ]);
 
 describe("every shipped template renders with the full variable set", () => {

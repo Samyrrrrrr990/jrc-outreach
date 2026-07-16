@@ -15,6 +15,8 @@
  *                 send/write nothing, exit non-zero if any source is dead
  *   build-dashboard  read the Sheet, write docs/index.html + docs/data.json
  *                    (aggregate metrics only — no contact data)
+ *   weekly-report    print the weekly markdown summary (with --email, also
+ *                    mail it to the operator via the existing SMTP account)
  *   alert-failure send a workflow-failed alert email (CI fallback step only)
  *   help          show this text
  */
@@ -30,6 +32,7 @@ const COMMANDS = [
   "doctor",
   "verify",
   "build-dashboard",
+  "weekly-report",
   "alert-failure",
   "help",
 ] as const;
@@ -165,6 +168,7 @@ const ALERTABLE = new Set<Command>([
   "scrape",
   "send",
   "build-dashboard",
+  "weekly-report",
 ]);
 
 /**
@@ -246,6 +250,11 @@ async function main(): Promise<void> {
       case "build-dashboard": {
         const { buildDashboard } = await import("./analytics/build");
         await buildDashboard(rest[0]);
+        break;
+      }
+      case "weekly-report": {
+        const { runWeeklyReport } = await import("./analytics/weekly");
+        await runWeeklyReport(process.argv.includes("--email"));
         break;
       }
       case "alert-failure": {

@@ -12,7 +12,13 @@ import { categoryConfig } from "../config/campaign";
 import { nowISO, todayISO } from "../core/dates";
 import { log } from "../core/logger";
 import { loadEnv } from "../config/env";
-import { loadTemplate, render, varsFor } from "../mail/templates";
+import { TEMPLATE_DIR, loadTemplate, render, varsFor } from "../mail/templates";
+import {
+  listVariantIds,
+  pickVariant,
+  resolveFollowUpSubject,
+  templateForVariant,
+} from "../mail/variants";
 import { generateMessageId } from "../mail/headers";
 import { composeRaw, sendRaw } from "../mail/smtp";
 import { appendToSent } from "../mail/imap";
@@ -33,10 +39,13 @@ export async function sendInitial(
   contact: Contact,
   dryRun: boolean,
 ): Promise<boolean> {
-  // Variant is chosen ONCE here and recorded on the row, so analytics can
-  // compare reply rates per variant. "control" = the base template.
-  const variant = "control";
-  const tpl = loadTemplate(categoryConfig(cat).initialTemplate);
+  // Variant is chosen ONCE here (uniform random across control + any
+  // templates/<base>.variant-<id>.md files) and recorded on the row, so
+  // analytics can compare reply rates per variant. Selection only — the
+  // weekly report may suggest a winner, but never switches templates itself.
+  const baseTemplate = categoryConfig(cat).initialTemplate;
+  const variant = pickVariant(listVariantIds(TEMPLATE_DIR, baseTemplate));
+  const tpl = loadTemplate(templateForVariant(baseTemplate, variant));
   const { subject, text } = render(tpl, varsFor(contact, sender()));
   const messageId = generateMessageId(sender().email);
 
@@ -84,8 +93,16 @@ export async function sendFollowUp(
   contact: Contact,
   dryRun: boolean,
 ): Promise<boolean> {
-  const tpl = loadTemplate(categoryConfig(cat).followUpTemplate);
-  const { subject, text } = render(tpl, varsFor(contact, sender()));
+  const cfg = categoryConfig(cat);
+  const vars = varsFor(contact, sender());
+  const rendered = render(loadTemplate(cfg.followUpTemplate), vars);
+  const text = rendered.text;
+  const subject = resolveFollowUpSubject({
+    variant: contact.variant,
+    followUpSubject: rendered.subject,
+    loadInitialVariantSubject: (id) =>
+      render(loadTemplate(templateForVariant(cfg.initialTemplate, id)), vars).subject,
+  });
   const messageId = generateMessageId(sender().email);
   const original = contact.message_id || undefined;
 
