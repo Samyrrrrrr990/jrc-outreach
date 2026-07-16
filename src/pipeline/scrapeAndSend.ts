@@ -19,7 +19,6 @@ import {
   trySendAlert,
 } from "../mail/alerts";
 import { assertProofPointsReady } from "../config/proofPoints";
-import { selectForInitial } from "../core/status";
 import { ensureSchema, readTab, appendLogRow } from "../sheets/crm";
 import { scrapeCategory } from "../scrape/scraper";
 import { sendInitial } from "./sender";
@@ -79,7 +78,7 @@ export async function sendInitialsPhase(
 export async function runDaily(dryRun: boolean): Promise<RunSummary> {
   const summary = new RunSummary("scrape+send");
   if (!dryRun) assertProofPointsReady();
-  await ensureSchema();
+  await ensureSchema(dryRun);
   await scrapePhase(summary, dryRun);
   await sendInitialsPhase(summary, dryRun);
   await finalize(summary, dryRun);
@@ -89,7 +88,7 @@ export async function runDaily(dryRun: boolean): Promise<RunSummary> {
 /** Scrape only. */
 export async function runScrape(dryRun: boolean): Promise<RunSummary> {
   const summary = new RunSummary("scrape");
-  await ensureSchema();
+  await ensureSchema(dryRun);
   await scrapePhase(summary, dryRun);
   await finalize(summary, dryRun);
   return summary;
@@ -99,7 +98,7 @@ export async function runScrape(dryRun: boolean): Promise<RunSummary> {
 export async function runSend(dryRun: boolean): Promise<RunSummary> {
   const summary = new RunSummary("send");
   if (!dryRun) assertProofPointsReady();
-  await ensureSchema();
+  await ensureSchema(dryRun);
   await sendInitialsPhase(summary, dryRun);
   await finalize(summary, dryRun);
   return summary;

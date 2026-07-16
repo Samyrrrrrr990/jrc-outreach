@@ -39,7 +39,7 @@ export interface ReadResult {
  * DIFFERS (renamed/reordered columns) throws loudly instead of being
  * overwritten — the data under it no longer means what the code assumes.
  */
-export async function ensureSchema(): Promise<void> {
+export async function ensureSchema(dryRun = false): Promise<void> {
   const tabs = [
     ...Object.values(CAMPAIGN.categories).map((c) => c.tab),
     CAMPAIGN.logTab,
@@ -47,6 +47,10 @@ export async function ensureSchema(): Promise<void> {
   const existing = await listTabs();
   for (const tab of tabs) {
     if (!existing.includes(tab)) {
+      if (dryRun) {
+        log.info(`[dry-run] would create missing tab "${tab}"`);
+        continue; // nothing to inspect on a tab that doesn't exist
+      }
       await ensureTab(tab);
       log.info(`Created missing tab "${tab}"`);
     }
@@ -54,15 +58,24 @@ export async function ensureSchema(): Promise<void> {
     const firstRow = await getValues(`${tab}!A1:${colFor(headers.length)}1`);
     const current = (firstRow[0] ?? []).map((v) => String(v));
     if (current.length === 0) {
+      if (dryRun) {
+        log.info(`[dry-run] would write header row for "${tab}"`);
+        continue;
+      }
       await updateValues(`${tab}!A1`, [headers as unknown as string[]]);
       log.info(`Wrote header row for "${tab}"`);
       continue;
     }
     const verdict = compareHeaders(current, headers);
     if (verdict === "upgrade") {
+      if (dryRun) {
+        log.info(`[dry-run] would upgrade header row for "${tab}"`);
+        continue;
+      }
       await updateValues(`${tab}!A1`, [headers as unknown as string[]]);
       log.info(`Upgraded header row for "${tab}" (+${headers.length - current.length} column(s))`);
     } else if (verdict === "mismatch") {
+      // Fails loudly even in dry-run — this is exactly what a dry-run is for.
       throw new Error(
         `Header row of tab "${tab}" does not match the expected schema ` +
           `(found: ${current.join(", ")}). Refusing to write — fix the sheet ` +

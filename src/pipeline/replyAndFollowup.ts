@@ -26,7 +26,7 @@ import { finalize } from "./scrapeAndSend";
 export async function runReplies(dryRun: boolean): Promise<RunSummary> {
   const summary = new RunSummary("reply+followup");
   if (!dryRun) assertProofPointsReady();
-  await ensureSchema();
+  await ensureSchema(dryRun);
 
   // Load every tab once; keep a category tag alongside each contact.
   const all: Array<{ cat: Category; contact: Contact }> = [];
