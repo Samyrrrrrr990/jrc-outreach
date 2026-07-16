@@ -17,6 +17,9 @@
  *                    (aggregate metrics only — no contact data)
  *   weekly-report    print the weekly markdown summary (with --email, also
  *                    mail it to the operator via the existing SMTP account)
+ *   retention     report cold rows past RETENTION_DAYS; --purge deletes them
+ *                 (never do_not_contact/replied rows); --email mails the report
+ *   scan-secrets  fail if any git-tracked file contains a secret-like string
  *   alert-failure send a workflow-failed alert email (CI fallback step only)
  *   help          show this text
  */
@@ -33,6 +36,8 @@ const COMMANDS = [
   "verify",
   "build-dashboard",
   "weekly-report",
+  "retention",
+  "scan-secrets",
   "alert-failure",
   "help",
 ] as const;
@@ -169,6 +174,7 @@ const ALERTABLE = new Set<Command>([
   "send",
   "build-dashboard",
   "weekly-report",
+  "retention",
 ]);
 
 /**
@@ -255,6 +261,20 @@ async function main(): Promise<void> {
       case "weekly-report": {
         const { runWeeklyReport } = await import("./analytics/weekly");
         await runWeeklyReport(process.argv.includes("--email"));
+        break;
+      }
+      case "retention": {
+        const { runRetention } = await import("./analytics/retentionRun");
+        await runRetention({
+          purge: process.argv.includes("--purge"),
+          email: process.argv.includes("--email"),
+          dryRun,
+        });
+        break;
+      }
+      case "scan-secrets": {
+        const { runSecretScanOrThrow } = await import("./security/scanRepo");
+        runSecretScanOrThrow();
         break;
       }
       case "alert-failure": {

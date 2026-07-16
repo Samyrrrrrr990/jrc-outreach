@@ -56,6 +56,9 @@ const EnvSchema = z.object({
   ALERT_EMAIL: z.string().email().optional(),
   ALERT_ON_FAILURE: boolish.optional(),
   ALERT_ERROR_THRESHOLD: z.coerce.number().int().positive().default(1),
+
+  /** Days a `cold` row is kept before the retention purge may remove it. */
+  RETENTION_DAYS: z.coerce.number().int().positive().default(365),
 });
 
 export type Env = z.infer<typeof EnvSchema> & {

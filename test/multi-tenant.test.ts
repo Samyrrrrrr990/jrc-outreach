@@ -63,6 +63,17 @@ describe("profile registry", () => {
     expect(profileById("jrc").production).toBe(true);
   });
 
+  it("every PRODUCTION profile has real proof points — CI fails otherwise", () => {
+    for (const p of Object.values(PROFILES)) {
+      if (p.production) {
+        expect(
+          proofPointsReady(p.proofPoints),
+          `production profile "${p.id}" still contains «placeholder» proof points`,
+        ).toBe(true);
+      }
+    }
+  });
+
   it("every profile respects the hard invariants: cap <= 50, quotas sum sanely", () => {
     for (const profile of Object.values(PROFILES)) {
       expect(profile.campaign.dailyCap).toBeLessThanOrEqual(50);

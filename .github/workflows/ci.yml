@@ -1,0 +1,37 @@
+name: CI
+
+# Every push/PR: typecheck, the full unit suite (which includes the
+# multi-tenant guard that production profiles contain no «placeholder»
+# proof points), and a secret scan over every git-tracked file. No secrets
+# needed, so this is safe to run on any branch/PR. ~2 min/run.
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (incl. double-send / quota / profile guards)
+        run: npm test
+
+      - name: Secret scan (fails on any secret-like string in the repo)
+        run: npx tsx src/cli.ts scan-secrets

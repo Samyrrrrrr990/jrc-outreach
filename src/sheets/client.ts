@@ -108,6 +108,40 @@ export async function ensureTab(title: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Delete whole rows (1-based row numbers) from a tab. Deletions are applied
+ * bottom-up in ONE batchUpdate so earlier deletions can't shift the indices
+ * of later ones. Used only by the retention purge.
+ */
+export async function deleteRows(title: string, rowNumbers: number[]): Promise<void> {
+  if (rowNumbers.length === 0) return;
+  const { sheets, spreadsheetId } = sheetsClient();
+  const res = await retried("sheetId lookup", () =>
+    sheets.spreadsheets.get({ spreadsheetId, fields: "sheets.properties" }),
+  );
+  const sheet = (res.data.sheets ?? []).find((s) => s.properties?.title === title);
+  const sheetId = sheet?.properties?.sheetId;
+  if (sheetId === undefined || sheetId === null) {
+    throw new Error(`Tab "${title}" not found; cannot delete rows`);
+  }
+  const requests = [...rowNumbers]
+    .sort((a, b) => b - a)
+    .map((row) => ({
+      deleteDimension: {
+        range: {
+          sheetId,
+          dimension: "ROWS" as const,
+          startIndex: row - 1,
+          endIndex: row,
+        },
+      },
+    }));
+  // DELIBERATELY NOT RETRIED: replaying a row deletion after a lost response
+  // would delete whichever row slid into that index. A failed purge is safe
+  // to re-run from scratch (it re-reads the sheet first).
+  await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests } });
+}
+
 /** Test seam. */
 export function resetSheetsClient(): void {
   cached = null;

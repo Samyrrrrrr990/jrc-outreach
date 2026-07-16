@@ -10,6 +10,7 @@ import type { Category, Contact } from "../core/types";
 import { CAMPAIGN, CATEGORY_ORDER, categoryConfig } from "../config/campaign";
 import { todayISO } from "../core/dates";
 import { log, RunSummary, setLogPhase } from "../core/logger";
+import { computeSendPlan, type CategoryPlanInput } from "../core/plan";
 import { loadEnv } from "../config/env";
 import {
   alertErrorThreshold,
@@ -44,30 +45,21 @@ export async function sendInitialsPhase(
   dryRun: boolean,
 ): Promise<void> {
   setLogPhase("send");
-  const today = todayISO();
-  let capRemaining: number = CAMPAIGN.dailyCap;
-
-  const perCat: Array<{ cat: Category; selected: Contact[] }> = [];
+  // All selection logic (quota net of today's sends, the daily cap, the
+  // one-send-per-address guard) is pure and unit-tested in core/plan.ts.
+  const inputs: CategoryPlanInput[] = [];
   for (const cat of CATEGORY_ORDER) {
     const { contacts } = await readTab(cat);
-    const emailedToday = contacts.filter((c) => c.date_emailed === today).length;
-    capRemaining -= emailedToday; // re-run safety: today's sends count to the cap
-    const quotaRemaining = Math.max(0, categoryConfig(cat).dailyQuota - emailedToday);
-    perCat.push({ cat, selected: selectForInitial(contacts, quotaRemaining) });
+    inputs.push({ cat, contacts, quota: categoryConfig(cat).dailyQuota });
   }
-  capRemaining = Math.max(0, capRemaining);
+  const plan = computeSendPlan(inputs, CAMPAIGN.dailyCap, todayISO());
 
-  for (const { cat, selected } of perCat) {
+  for (const { cat, selected } of plan) {
     for (const contact of selected) {
-      if (capRemaining <= 0) {
-        log.warn(`Daily cap of ${CAMPAIGN.dailyCap} reached; stopping sends`);
-        break;
-      }
       try {
         const sent = await sendInitial(cat, contact, dryRun);
         if (sent) {
           summary.addSent(cat);
-          capRemaining--;
         } else {
           summary.addSkipped("status-changed");
         }
@@ -79,7 +71,6 @@ export async function sendInitialsPhase(
         summary.addSkipped("send-error");
       }
     }
-    if (capRemaining <= 0) break;
   }
   setLogPhase(null);
 }

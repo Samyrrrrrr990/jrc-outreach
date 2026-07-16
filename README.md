@@ -244,6 +244,22 @@ Pages and open `docs/index.html` locally / from the repo view.
 
 ---
 
+## Security & retention
+
+- **CI (`ci.yml`)** runs on every push/PR: typecheck, the full unit suite
+  (including the double-send, quota-math, and multi-tenant guards, and the
+  check that a production profile has no `«placeholder»` proof points), and
+  `scan-secrets` — a scanner that fails the build if any git-tracked file
+  contains a secret-like string (private keys, service-account JSON, API
+  keys/tokens, hardcoded passwords). Findings report file/line only, never
+  the matched content.
+- **Data retention** is documented in `DATA_RETENTION.md`: cold rows purge
+  after `RETENTION_DAYS` (default 365); `do_not_contact` rows are never
+  purged (they're the suppression list). `retention.yml` emails a monthly
+  report; purging is deliberately a manual trigger.
+
+---
+
 ## Project layout
 
 ```

@@ -20,6 +20,7 @@ import {
 } from "./schema";
 import {
   appendValues,
+  deleteRows,
   ensureTab,
   getValues,
   listTabs,
@@ -164,4 +165,9 @@ export async function patchContact(
 /** Append one run-summary row to the Log tab. */
 export async function appendLogRow(row: string[]): Promise<void> {
   await appendValues(`${CAMPAIGN.logTab}!A1`, [row]);
+}
+
+/** Delete contact rows (retention purge only). */
+export async function deleteContactRows(cat: Category, rowNumbers: number[]): Promise<void> {
+  await deleteRows(categoryConfig(cat).tab, rowNumbers);
 }
