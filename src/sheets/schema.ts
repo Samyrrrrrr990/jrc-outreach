@@ -7,7 +7,12 @@ import type { Contact } from "../core/types";
 import { isStatus } from "../core/types";
 import { normalizeEmail } from "../scrape/email";
 
-/** Column order, left to right. The header row must match this exactly. */
+/**
+ * Column order, left to right. The header row must match this exactly.
+ * NEW COLUMNS ARE ONLY EVER APPENDED — v1 rows/indices stay valid, and
+ * ensureSchema() extends an existing sheet's header row in place (see
+ * compareHeaders below for the safety rule).
+ */
 export const HEADERS = [
   "email",
   "name",
@@ -22,6 +27,8 @@ export const HEADERS = [
   "date_cold",
   "message_id",
   "notes",
+  "variant",
+  "bounced_at",
 ] as const;
 
 /** Last column letter for the schema (13 cols -> "M"). */
@@ -43,6 +50,26 @@ export const LOG_HEADERS = [
 export type RowParse =
   | { ok: true; contact: Contact }
   | { ok: false; reason: string; row: number };
+
+export type HeaderComparison = "ok" | "upgrade" | "mismatch";
+
+/**
+ * Decide whether an existing header row can be safely upgraded in place.
+ * "upgrade" only when the existing row is a strict PREFIX of the expected
+ * headers (i.e. we are only appending columns). Any renamed/reordered column
+ * is "mismatch" — the caller must fail loudly rather than overwrite a header
+ * whose data no longer means what the code thinks it means.
+ */
+export function compareHeaders(
+  existing: readonly string[],
+  expected: readonly string[],
+): HeaderComparison {
+  if (existing.length > expected.length) return "mismatch";
+  for (let i = 0; i < existing.length; i++) {
+    if ((existing[i] ?? "").trim() !== expected[i]) return "mismatch";
+  }
+  return existing.length === expected.length ? "ok" : "upgrade";
+}
 
 function cell(row: string[], i: number): string {
   return (row[i] ?? "").toString().trim();
@@ -86,6 +113,8 @@ export function rowToContact(row: string[], rowNumber: number): RowParse {
       date_cold: cell(row, 10),
       message_id: cell(row, 11),
       notes: cell(row, 12),
+      variant: cell(row, 13),
+      bounced_at: cell(row, 14),
       _row: rowNumber,
     },
   };
@@ -107,6 +136,8 @@ export function contactToRow(c: Contact): string[] {
     c.date_cold,
     c.message_id,
     c.notes,
+    c.variant ?? "",
+    c.bounced_at ?? "",
   ];
 }
 
@@ -129,6 +160,8 @@ export function applyPatch(existingRow: string[], patch: Partial<Contact>): stri
         date_cold: existingRow[10] ?? "",
         message_id: existingRow[11] ?? "",
         notes: existingRow[12] ?? "",
+        variant: existingRow[13] ?? "",
+        bounced_at: existingRow[14] ?? "",
       } as Contact);
   return contactToRow({ ...base, ...patch });
 }

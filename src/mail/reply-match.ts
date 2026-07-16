@@ -30,6 +30,19 @@ export function normalizeMsgId(id: string): string {
   return id.trim().replace(/^<|>$/g, "").trim().toLowerCase();
 }
 
+const BOUNCE_LOCALPARTS = /^(mailer-daemon|postmaster|mail-?delivery-?(subsystem|system)|double-?bounce)/i;
+
+/**
+ * Is this sender a delivery-failure robot rather than a human? A bounce often
+ * carries our own Message-ID in its References/In-Reply-To, which would
+ * otherwise be counted as a reply. Matching is on the LOCAL PART prefix only
+ * ("daemon.fan@uni.ca" is a person, "mailer-daemon@uni.ca" is not).
+ */
+export function isBounceSender(from: string): boolean {
+  const local = from.split("@")[0] ?? "";
+  return BOUNCE_LOCALPARTS.test(local.trim());
+}
+
 /** Build a lookup from normalised sent Message-ID -> the row that sent it. */
 export function buildSentIndex(refs: SentRef[]): Map<string, SentRef> {
   const idx = new Map<string, SentRef>();

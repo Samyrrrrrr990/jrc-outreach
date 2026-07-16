@@ -33,6 +33,9 @@ export async function sendInitial(
   contact: Contact,
   dryRun: boolean,
 ): Promise<boolean> {
+  // Variant is chosen ONCE here and recorded on the row, so analytics can
+  // compare reply rates per variant. "control" = the base template.
+  const variant = "control";
   const tpl = loadTemplate(categoryConfig(cat).initialTemplate);
   const { subject, text } = render(tpl, varsFor(contact, sender()));
   const messageId = generateMessageId(sender().email);
@@ -42,8 +45,10 @@ export async function sendInitial(
       `[dry-run] INITIAL -> ${contact.email}\n` +
         `  subject: ${subject}\n` +
         `  message-id: ${messageId}\n` +
+        `  variant: ${variant}\n` +
         `  crm: status=emailed date_emailed=${todayISO()}\n` +
         indent(text),
+      { category: cat, action: "send", result: "dry-run", variant },
     );
     return true;
   }
@@ -57,10 +62,16 @@ export async function sendInitial(
   const written = await patchContact(
     cat,
     contact._row!,
-    { status: "emailed", date_emailed: todayISO(), message_id: messageId },
+    { status: "emailed", date_emailed: todayISO(), message_id: messageId, variant },
     "new",
   );
-  if (written) log.info(`Emailed ${contact.email} (${cat})`);
+  if (written)
+    log.info(`Emailed ${contact.email} (${cat})`, {
+      category: cat,
+      action: "send",
+      result: "sent",
+      variant,
+    });
   return written;
 }
 
@@ -129,6 +140,22 @@ export async function markReplied(cat: Category, contact: Contact): Promise<bool
     status: "replied",
     replied_at: nowISO(),
   });
+}
+
+/**
+ * Mark a contact bounced: the address is dead, so the row goes straight to
+ * `cold` ("stop forever" — the existing vocabulary) with bounced_at recorded
+ * for analytics. Only ever applied to emailed/followed_up rows.
+ */
+export async function markBounced(cat: Category, contact: Contact): Promise<boolean> {
+  if (contact.status !== "emailed" && contact.status !== "followed_up") return false;
+  const note = contact.notes ? `${contact.notes} | bounced` : "bounced";
+  return patchContact(
+    cat,
+    contact._row!,
+    { status: "cold", date_cold: todayISO(), bounced_at: nowISO(), notes: note },
+    contact.status,
+  );
 }
 
 function indent(text: string): string {

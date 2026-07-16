@@ -16,10 +16,11 @@ import { ensureSchema, readTab } from "../sheets/crm";
 import { fetchRecentInbox } from "../mail/imap";
 import {
   buildSentIndex,
+  isBounceSender,
   matchReplies,
   type SentRef,
 } from "../mail/reply-match";
-import { markCold, markReplied, sendFollowUp } from "./sender";
+import { markBounced, markCold, markReplied, sendFollowUp } from "./sender";
 import { finalize } from "./scrapeAndSend";
 
 export async function runReplies(dryRun: boolean): Promise<RunSummary> {
@@ -83,17 +84,43 @@ async function detectReplies(
   for (const item of all) byRow.set(item.contact._row!, item);
 
   for (const { ref, incoming: msg } of matches) {
-    summary.repliesDetected++;
+    // A delivery-failure robot echoing our Message-ID is a BOUNCE, not a
+    // reply — count it separately and retire the dead address to cold.
+    const bounce = isBounceSender(msg.from);
     if (dryRun) {
-      log.info(`[dry-run] would mark replied: ${ref.email} (from "${msg.from}")`);
+      if (bounce) {
+        summary.addSkipped("bounce");
+        log.info(`[dry-run] would mark bounced: ${ref.email} (from "${msg.from}")`);
+      } else {
+        summary.repliesDetected++;
+        log.info(`[dry-run] would mark replied: ${ref.email} (from "${msg.from}")`);
+      }
       continue;
     }
     const found = byRow.get(ref.row);
-    if (found) {
+    if (!found) continue;
+    if (bounce) {
+      const ok = await markBounced(found.cat, found.contact);
+      if (ok) {
+        found.contact.status = "cold";
+        found.contact.bounced_at = new Date().toISOString();
+        summary.addSkipped("bounce");
+        log.warn(`Bounce detected: ${ref.email} -> status=cold (bounced)`, {
+          category: found.cat,
+          action: "bounce",
+          result: "marked",
+        });
+      }
+    } else {
+      summary.repliesDetected++;
       await markReplied(found.cat, found.contact);
       // Reflect the change in our in-memory copy so follow-up skips it.
       found.contact.status = "replied";
-      log.info(`Reply detected: ${ref.email} -> status=replied`);
+      log.info(`Reply detected: ${ref.email} -> status=replied`, {
+        category: found.cat,
+        action: "reply",
+        result: "marked",
+      });
     }
   }
 

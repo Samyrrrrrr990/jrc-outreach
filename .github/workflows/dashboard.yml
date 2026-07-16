@@ -1,0 +1,84 @@
+name: Build dashboard
+
+# Regenerates the static dashboard (docs/index.html + docs/data.json —
+# AGGREGATE metrics only, no contact data) and commits it, so GitHub Pages
+# (free, served from /docs on the default branch) always shows fresh numbers.
+# Runs after the daily outreach window; ~2 min/run.
+
+on:
+  schedule:
+    # 14:10 UTC daily — an hour after the daily outreach run starts.
+    - cron: "10 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dashboard
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Build dashboard from the Sheet
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_SECURE: ${{ secrets.IMAP_SECURE }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          IMAP_SENT_MAILBOX: ${{ secrets.IMAP_SENT_MAILBOX }}
+          IMAP_INBOX_MAILBOX: ${{ secrets.IMAP_INBOX_MAILBOX }}
+          SENDER_NAME: ${{ secrets.SENDER_NAME }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          REPLY_TO_EMAIL: ${{ secrets.REPLY_TO_EMAIL }}
+          UNSUBSCRIBE_URL: ${{ secrets.UNSUBSCRIBE_URL }}
+        run: npx tsx src/cli.ts build-dashboard
+
+      - name: Commit updated dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          if git diff --cached --quiet; then
+            echo "Dashboard unchanged; nothing to commit."
+          else
+            git commit -m "chore: refresh dashboard [skip ci]"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push
+          fi
+
+      - name: Alert on failure (own SMTP)
+        if: failure()
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SENDER_NAME: ${{ secrets.SENDER_NAME }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: |
+          if [ ! -f .alert-sent ]; then
+            npx tsx src/cli.ts alert-failure
+          fi

@@ -13,6 +13,8 @@
  *   doctor        verify configuration and connectivity, change nothing
  *   verify        probe every scrape source URL + robots.txt + templates,
  *                 send/write nothing, exit non-zero if any source is dead
+ *   build-dashboard  read the Sheet, write docs/index.html + docs/data.json
+ *                    (aggregate metrics only — no contact data)
  *   alert-failure send a workflow-failed alert email (CI fallback step only)
  *   help          show this text
  */
@@ -27,6 +29,7 @@ const COMMANDS = [
   "preview",
   "doctor",
   "verify",
+  "build-dashboard",
   "alert-failure",
   "help",
 ] as const;
@@ -155,8 +158,14 @@ function logFormat(): LogFormat {
   return process.env.GITHUB_ACTIONS === "true" ? "json" : "pretty";
 }
 
-/** Commands that send/write for real and should therefore alert on failure. */
-const ALERTABLE = new Set<Command>(["run-daily", "run-replies", "scrape", "send"]);
+/** Scheduled commands whose failure should alert the operator. */
+const ALERTABLE = new Set<Command>([
+  "run-daily",
+  "run-replies",
+  "scrape",
+  "send",
+  "build-dashboard",
+]);
 
 /**
  * The workflow's `if: failure()` fallback step checks this marker so a fatal
@@ -232,6 +241,11 @@ async function main(): Promise<void> {
       case "verify": {
         const { runVerify } = await import("./pipeline/verify");
         await runVerify();
+        break;
+      }
+      case "build-dashboard": {
+        const { buildDashboard } = await import("./analytics/build");
+        await buildDashboard(rest[0]);
         break;
       }
       case "alert-failure": {

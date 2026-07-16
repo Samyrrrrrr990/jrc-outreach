@@ -78,6 +78,8 @@ export function dueForFollowUp(
   now: Date = new Date(),
 ): boolean {
   if (c.status !== "emailed" || !isContactable(c)) return false;
+  // A bounced address is dead — nudging it can only hurt sender reputation.
+  if (c.bounced_at) return false;
   const elapsed = daysSince(c.date_emailed, now);
   return elapsed !== null && elapsed >= followUpAfterDays;
 }

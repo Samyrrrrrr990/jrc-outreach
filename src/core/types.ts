@@ -57,6 +57,13 @@ export interface Contact {
   message_id: string;
   /** Freeform notes / manual-review flags. */
   notes: string;
+  /**
+   * Template variant used for the initial send (e.g. "control", "b") so
+   * analytics can compare reply rates per variant. Empty on v1 rows.
+   */
+  variant?: string;
+  /** When a delivery bounce was detected for the initial/follow-up email. */
+  bounced_at?: string;
   /** In-memory only: 1-based row number in the sheet. */
   _row?: number;
 }

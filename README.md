@@ -141,8 +141,15 @@ Each contact tab has these columns (row 1 is the header, created for you):
 
 ```
 email | name | org | field | source_url | status | date_scraped |
-date_emailed | replied_at | last_followup | date_cold | message_id | notes
+date_emailed | replied_at | last_followup | date_cold | message_id | notes |
+variant | bounced_at
 ```
+
+(`variant` records which template variant the initial email used, for the
+analytics below; `bounced_at` is set when a delivery bounce is detected — the
+row goes to `cold` and is never followed up. New columns are only ever
+APPENDED, and `ensureSchema` upgrades an existing sheet's header row in place;
+a header row that *differs* makes the run fail loudly instead of overwriting.)
 
 **Status lifecycle** (the only values that are valid — a typo in this column is
 treated as malformed and skipped, so it can never accidentally be emailed):
@@ -174,6 +181,9 @@ will ever touch that row again.
   against stored Message-IDs — never subject/keyword guessing. Mail from a known
   contact that lacks a matching header is flagged for manual review, not
   auto-marked.
+- **Bounces are not "replies".** A delivery-failure robot (mailer-daemon,
+  postmaster, …) echoing our Message-ID marks the row `cold` with `bounced_at`
+  set — it is never counted as a reply and never followed up.
 - **Fails loud.** Missing secrets, bad config, or any step error exits non-zero,
   turning the Actions run red instead of silently skipping a day.
 - **Failure alerts to your own inbox.** A failed live run (or one that
@@ -194,6 +204,23 @@ will ever touch that row again.
 - **Good web citizen.** robots.txt is honored, requests are rate-limited per
   domain, a truthful User-Agent is sent, and every scraped row carries a
   `source_url` you can audit.
+
+---
+
+## Analytics & dashboard
+
+`npx tsx src/cli.ts build-dashboard` reads the Sheet and writes a fully
+self-contained static page to `docs/index.html` (plus `docs/data.json`):
+sends per day by category, replies per day, reply rate per category,
+time-to-reply distribution, pipeline status, and per-variant performance.
+**Aggregates only — no contact emails/names ever leave the Sheet**, so the
+page is safe to host. It works offline from disk, light and dark mode.
+
+The `dashboard.yml` workflow regenerates and commits it daily. To serve it
+with GitHub Pages (free): repo **Settings → Pages → Deploy from a branch →
+`main` / `docs`**. Caveat: on GitHub's Free plan, Pages only works on
+**public** repos — on a private repo either make the repo public, or skip
+Pages and open `docs/index.html` locally / from the repo view.
 
 ---
 

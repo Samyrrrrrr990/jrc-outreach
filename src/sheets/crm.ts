@@ -14,6 +14,7 @@ import {
   LAST_COL,
   LOG_HEADERS,
   applyPatch,
+  compareHeaders,
   contactToRow,
   rowToContact,
 } from "./schema";
@@ -30,7 +31,13 @@ export interface ReadResult {
   malformed: number;
 }
 
-/** Ensure every tab exists and has the correct header row. */
+/**
+ * Ensure every tab exists and has the correct header row. When the code adds
+ * new trailing columns (e.g. variant/bounced_at), an existing sheet whose
+ * headers are a strict prefix is upgraded in place; a header row that
+ * DIFFERS (renamed/reordered columns) throws loudly instead of being
+ * overwritten — the data under it no longer means what the code assumes.
+ */
 export async function ensureSchema(): Promise<void> {
   const tabs = [
     ...Object.values(CAMPAIGN.categories).map((c) => c.tab),
@@ -44,9 +51,22 @@ export async function ensureSchema(): Promise<void> {
     }
     const headers = tab === CAMPAIGN.logTab ? LOG_HEADERS : HEADERS;
     const firstRow = await getValues(`${tab}!A1:${colFor(headers.length)}1`);
-    if (firstRow.length === 0 || (firstRow[0] ?? []).length === 0) {
+    const current = (firstRow[0] ?? []).map((v) => String(v));
+    if (current.length === 0) {
       await updateValues(`${tab}!A1`, [headers as unknown as string[]]);
       log.info(`Wrote header row for "${tab}"`);
+      continue;
+    }
+    const verdict = compareHeaders(current, headers);
+    if (verdict === "upgrade") {
+      await updateValues(`${tab}!A1`, [headers as unknown as string[]]);
+      log.info(`Upgraded header row for "${tab}" (+${headers.length - current.length} column(s))`);
+    } else if (verdict === "mismatch") {
+      throw new Error(
+        `Header row of tab "${tab}" does not match the expected schema ` +
+          `(found: ${current.join(", ")}). Refusing to write — fix the sheet ` +
+          `or the code so they agree.`,
+      );
     }
   }
 }
