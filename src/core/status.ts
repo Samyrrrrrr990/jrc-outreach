@@ -24,10 +24,29 @@ export function eligibleForInitial(c: Contact): boolean {
  * Select which `new` rows to email this run. Honours the per-category quota
  * and preserves sheet order (oldest-scraped first, since we append). Pure:
  * the caller decides what "already sent today" means.
+ *
+ * Double-send guards (defense-in-depth on top of the per-row status check):
+ * an email address is selected at most once per run, and a `new` row is
+ * skipped entirely if the same address appears in ANY other row that has
+ * already left `new` — duplicate rows (manual entry, a retried append) can
+ * therefore never cause a second send to the same person.
  */
 export function selectForInitial(rows: Contact[], quota: number): Contact[] {
   if (quota <= 0) return [];
-  return rows.filter(eligibleForInitial).slice(0, quota);
+  const contacted = new Set<string>();
+  for (const c of rows) {
+    if (c.status !== "new") contacted.add(c.email.toLowerCase());
+  }
+  const picked: Contact[] = [];
+  for (const c of rows) {
+    if (picked.length >= quota) break;
+    if (!eligibleForInitial(c)) continue;
+    const key = c.email.toLowerCase();
+    if (contacted.has(key)) continue;
+    contacted.add(key);
+    picked.push(c);
+  }
+  return picked;
 }
 
 /**

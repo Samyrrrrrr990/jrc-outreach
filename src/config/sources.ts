@@ -135,13 +135,16 @@ export const DIRECTORY_SOURCES: DirectorySource[] = [
  * those as leads to research further, not entries to invent contact info for.
  */
 export const SPONSOR_SEEDS: SponsorSeed[] = [
-  {
-    name: "Corporate & Foundation Giving Team",
-    org: "Let's Talk Science",
-    field: "National K-12 STEM education charity — corporate/foundation partnerships",
-    contactUrl: "https://letstalkscience.ca/our-supporters/corporate-foundation-giving",
-    source_url: "https://letstalkscience.ca/our-supporters/corporate-foundation-giving",
-  },
+  // DISABLED 2026-07-15: letstalkscience.ca returns HTTP 403 to our bot
+  // User-Agent (found by `cli.ts verify`), i.e. it refuses automated access.
+  // Respect that — reach out to them manually instead of scraping.
+  // {
+  //   name: "Corporate & Foundation Giving Team",
+  //   org: "Let's Talk Science",
+  //   field: "National K-12 STEM education charity — corporate/foundation partnerships",
+  //   contactUrl: "https://letstalkscience.ca/our-supporters/corporate-foundation-giving",
+  //   source_url: "https://letstalkscience.ca/our-supporters/corporate-foundation-giving",
+  // },
   {
     name: "Partnerships Team",
     org: "Actua",

@@ -1,10 +1,20 @@
 /**
- * Small structured logger with a run-summary accumulator. Kept dependency-free
- * so it works identically in CI and locally. Never logs secrets — callers pass
+ * Structured logger with a run-summary accumulator. Dependency-free so it
+ * works identically in CI and locally. Never logs secrets — callers pass
  * plain values only.
+ *
+ * Two output formats:
+ *   - "json"   one JSON object per line: {ts, level, msg, phase?, dryRun?, ...meta}
+ *     — the default on GitHub Actions, so a failure is diagnosable from the
+ *     run output alone (grep for "level":"error").
+ *   - "pretty" the original human-readable line, the default locally.
+ *
+ * Callers attach structure via `meta` ({category, action, result, ...}) and
+ * the pipeline sets the current phase with setLogPhase().
  */
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
+export type LogFormat = "json" | "pretty";
 
 const LEVEL_RANK: Record<LogLevel, number> = {
   debug: 10,
@@ -13,25 +23,71 @@ const LEVEL_RANK: Record<LogLevel, number> = {
   error: 40,
 };
 
-let threshold: LogLevel = "info";
-let dryRun = false;
+type Sink = (line: string) => void;
 
-export function configureLogger(opts: { level?: LogLevel; dryRun?: boolean }): void {
+// eslint-disable-next-line no-console
+const consoleSink: Sink = (line) => console.log(line);
+
+const DEFAULTS = {
+  threshold: "info" as LogLevel,
+  dryRun: false,
+  format: "pretty" as LogFormat,
+  sink: consoleSink,
+  phase: null as string | null,
+};
+
+let threshold = DEFAULTS.threshold;
+let dryRun = DEFAULTS.dryRun;
+let format = DEFAULTS.format;
+let sink = DEFAULTS.sink;
+let phase = DEFAULTS.phase;
+
+export function configureLogger(opts: {
+  level?: LogLevel;
+  dryRun?: boolean;
+  format?: LogFormat;
+  sink?: Sink;
+}): void {
   if (opts.level) threshold = opts.level;
   if (typeof opts.dryRun === "boolean") dryRun = opts.dryRun;
+  if (opts.format) format = opts.format;
+  if (opts.sink) sink = opts.sink;
+}
+
+/** Tag every subsequent line with the pipeline phase (null to clear). */
+export function setLogPhase(p: string | null): void {
+  phase = p;
+}
+
+/** Test seam: restore all defaults (console sink, pretty, info, no phase). */
+export function resetLogger(): void {
+  threshold = DEFAULTS.threshold;
+  dryRun = DEFAULTS.dryRun;
+  format = DEFAULTS.format;
+  sink = DEFAULTS.sink;
+  phase = DEFAULTS.phase;
 }
 
 function emit(level: LogLevel, msg: string, meta?: Record<string, unknown>): void {
   if (LEVEL_RANK[level] < LEVEL_RANK[threshold]) return;
-  const prefix = dryRun ? "[DRY-RUN]" : "";
   const time = new Date().toISOString();
+
+  if (format === "json") {
+    const record: Record<string, unknown> = { ts: time, level, msg };
+    if (phase) record.phase = phase;
+    if (dryRun) record.dryRun = true;
+    if (meta) Object.assign(record, meta);
+    sink(JSON.stringify(record));
+    return;
+  }
+
+  const prefix = dryRun ? "[DRY-RUN]" : "";
   const tag = `${time} ${level.toUpperCase().padEnd(5)}${prefix}`;
+  const phaseTag = phase ? ` [${phase}]` : "";
   if (meta && Object.keys(meta).length > 0) {
-    // eslint-disable-next-line no-console
-    console.log(`${tag} ${msg}`, JSON.stringify(meta));
+    sink(`${tag}${phaseTag} ${msg} ${JSON.stringify(meta)}`);
   } else {
-    // eslint-disable-next-line no-console
-    console.log(`${tag} ${msg}`);
+    sink(`${tag}${phaseTag} ${msg}`);
   }
 }
 
@@ -56,6 +112,7 @@ export class RunSummary {
   wentCold = 0;
   skipped: Record<string, number> = {};
   errors: string[] = [];
+  errorsByCategory: Record<string, number> = {};
 
   constructor(job: string) {
     this.job = job;
@@ -69,7 +126,16 @@ export class RunSummary {
   addSent(cat: string, n = 1) { this.add(this.sent, cat, n); }
   addFollowUp(cat: string, n = 1) { this.add(this.followUps, cat, n); }
   addSkipped(reason: string, n = 1) { this.add(this.skipped, reason, n); }
-  addError(msg: string) { this.errors.push(msg); }
+
+  addError(msg: string, category = "general") {
+    this.errors.push(msg);
+    this.add(this.errorsByCategory, category);
+  }
+
+  /** Highest per-category error count — what the alert threshold compares to. */
+  maxCategoryErrors(): number {
+    return Math.max(0, ...Object.values(this.errorsByCategory));
+  }
 
   private total(bucket: Record<string, number>): number {
     return Object.values(bucket).reduce((a, b) => a + b, 0);
@@ -90,6 +156,20 @@ export class RunSummary {
       `dur=${secs}s`,
     ];
     return parts.join(" ");
+  }
+
+  /** Structured counterpart of toLine(), for the JSON log stream. */
+  toMeta(): Record<string, unknown> {
+    return {
+      job: this.job,
+      scraped: this.total(this.scraped),
+      sent: this.total(this.sent),
+      followups: this.total(this.followUps),
+      replies: this.repliesDetected,
+      cold: this.wentCold,
+      skipped: this.total(this.skipped),
+      errors: this.errors.length,
+    };
   }
 
   /** Row for the Sheet "Log" tab. */

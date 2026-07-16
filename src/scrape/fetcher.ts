@@ -6,6 +6,7 @@
  */
 import { CAMPAIGN } from "../config/campaign";
 import { log } from "../core/logger";
+import { withRetry } from "../core/retry";
 import { isAllowed } from "./robots";
 
 /** Per-host timestamp of the last request, for rate limiting. */
@@ -53,17 +54,35 @@ export async function fetchPage(
 
   await throttle(host);
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": CAMPAIGN.userAgent,
-        Accept: "text/html,application/xhtml+xml",
+    // A flaky network read gets ONE polite retry (reads only — never sends).
+    const res = await withRetry(
+      async () => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          return await fetch(url, {
+            headers: {
+              "User-Agent": CAMPAIGN.userAgent,
+              Accept: "text/html,application/xhtml+xml",
+            },
+            redirect: "follow",
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
       },
-      redirect: "follow",
-      signal: controller.signal,
-    });
+      {
+        attempts: 2,
+        onRetry: ({ delayMs, error }) =>
+          log.warn(`Fetch ${url} hiccuped; retrying once`, {
+            action: "fetch-retry",
+            delayMs,
+            err: String(error),
+          }),
+      },
+    );
     if (!res.ok) {
       log.warn(`Fetch ${url} -> HTTP ${res.status}; skipping`);
       return null;
@@ -78,8 +97,6 @@ export async function fetchPage(
   } catch (err) {
     log.warn(`Fetch ${url} failed; skipping`, { err: String(err) });
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 

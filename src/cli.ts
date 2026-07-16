@@ -11,10 +11,13 @@
  *   scrape        scrape only
  *   send          send initial emails only
  *   doctor        verify configuration and connectivity, change nothing
+ *   verify        probe every scrape source URL + robots.txt + templates,
+ *                 send/write nothing, exit non-zero if any source is dead
+ *   alert-failure send a workflow-failed alert email (CI fallback step only)
  *   help          show this text
  */
-import { existsSync } from "node:fs";
-import { configureLogger, log } from "./core/logger";
+import { existsSync, writeFileSync } from "node:fs";
+import { configureLogger, log, type LogFormat } from "./core/logger";
 
 const COMMANDS = [
   "run-daily",
@@ -23,6 +26,8 @@ const COMMANDS = [
   "send",
   "preview",
   "doctor",
+  "verify",
+  "alert-failure",
   "help",
 ] as const;
 type Command = (typeof COMMANDS)[number];
@@ -143,10 +148,50 @@ async function doctor(): Promise<void> {
   log.info("All checks passed.");
 }
 
+/** JSON logs in CI (diagnosable from Actions output alone), pretty locally. */
+function logFormat(): LogFormat {
+  const forced = (process.env.LOG_FORMAT ?? "").trim().toLowerCase();
+  if (forced === "json" || forced === "pretty") return forced;
+  return process.env.GITHUB_ACTIONS === "true" ? "json" : "pretty";
+}
+
+/** Commands that send/write for real and should therefore alert on failure. */
+const ALERTABLE = new Set<Command>(["run-daily", "run-replies", "scrape", "send"]);
+
+/**
+ * The workflow's `if: failure()` fallback step checks this marker so a fatal
+ * error alerted from inside the process is not emailed a second time.
+ */
+const ALERT_MARKER = ".alert-sent";
+
+async function alertFatal(command: string, err: unknown, dryRun: boolean): Promise<void> {
+  const { alertsEnabled, shouldSendAlert, trySendAlert } = await import("./mail/alerts");
+  const decision = {
+    enabled: alertsEnabled(),
+    dryRun,
+    fatal: true,
+    errorCount: 0,
+    threshold: 1,
+  };
+  if (!shouldSendAlert(decision)) return;
+  const sent = await trySendAlert({
+    job: command,
+    kind: "fatal",
+    errors: [String(err instanceof Error ? err.message : err)],
+  });
+  if (sent) {
+    try {
+      writeFileSync(ALERT_MARKER, new Date().toISOString());
+    } catch {
+      /* marker is best-effort */
+    }
+  }
+}
+
 async function main(): Promise<void> {
   loadDotEnv();
   const { command, rest, dryRun, verbose } = parseArgs(process.argv);
-  configureLogger({ level: verbose ? "debug" : "info", dryRun });
+  configureLogger({ level: verbose ? "debug" : "info", dryRun, format: logFormat() });
 
   if (command === "help" || !COMMANDS.includes(command as Command)) {
     usage();
@@ -156,40 +201,65 @@ async function main(): Promise<void> {
 
   log.info(`Starting "${command}"${dryRun ? " (dry-run)" : ""}`);
 
-  switch (command as Command) {
-    case "run-daily": {
-      const { runDaily } = await import("./pipeline/scrapeAndSend");
-      await runDaily(dryRun);
-      break;
+  try {
+    switch (command as Command) {
+      case "run-daily": {
+        const { runDaily } = await import("./pipeline/scrapeAndSend");
+        await runDaily(dryRun);
+        break;
+      }
+      case "run-replies": {
+        const { runReplies } = await import("./pipeline/replyAndFollowup");
+        await runReplies(dryRun);
+        break;
+      }
+      case "scrape": {
+        const { runScrape } = await import("./pipeline/scrapeAndSend");
+        await runScrape(dryRun);
+        break;
+      }
+      case "send": {
+        const { runSend } = await import("./pipeline/scrapeAndSend");
+        await runSend(dryRun);
+        break;
+      }
+      case "preview":
+        await preview(rest[0]);
+        break;
+      case "doctor":
+        await doctor();
+        break;
+      case "verify": {
+        const { runVerify } = await import("./pipeline/verify");
+        await runVerify();
+        break;
+      }
+      case "alert-failure": {
+        // CI fallback: the job failed before/without an in-process alert.
+        const { trySendAlert } = await import("./mail/alerts");
+        const job = process.env.GITHUB_WORKFLOW ?? rest[0] ?? "workflow";
+        await trySendAlert({
+          job,
+          kind: "fatal",
+          errors: ["The GitHub Actions job failed — see the run logs."],
+        });
+        break;
+      }
+      case "help":
+        usage();
+        break;
     }
-    case "run-replies": {
-      const { runReplies } = await import("./pipeline/replyAndFollowup");
-      await runReplies(dryRun);
-      break;
+  } catch (err) {
+    log.error(`FATAL: ${String(err instanceof Error ? err.stack ?? err.message : err)}`);
+    if (ALERTABLE.has(command as Command)) {
+      await alertFatal(command, err, dryRun);
     }
-    case "scrape": {
-      const { runScrape } = await import("./pipeline/scrapeAndSend");
-      await runScrape(dryRun);
-      break;
-    }
-    case "send": {
-      const { runSend } = await import("./pipeline/scrapeAndSend");
-      await runSend(dryRun);
-      break;
-    }
-    case "preview":
-      await preview(rest[0]);
-      break;
-    case "doctor":
-      await doctor();
-      break;
-    case "help":
-      usage();
-      break;
+    process.exitCode = 1;
   }
 }
 
 main().catch((err) => {
+  // Truly unexpected: an error escaping main() itself.
   log.error(`FATAL: ${String(err instanceof Error ? err.stack ?? err.message : err)}`);
   process.exitCode = 1;
 });

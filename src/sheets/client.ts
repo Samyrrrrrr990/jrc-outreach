@@ -5,6 +5,25 @@
  */
 import { google, type sheets_v4 } from "googleapis";
 import { loadEnv } from "../config/env";
+import { log } from "../core/logger";
+import { withRetry } from "../core/retry";
+
+/**
+ * Sheets API calls retry transient failures (429 rate limits, 5xx). Safe:
+ * reads are idempotent, and update/append here rewrite the same values —
+ * these are CRM writes, never email sends (sends are never retried).
+ */
+function retried<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  return withRetry(fn, {
+    onRetry: ({ attempt, delayMs, error }) =>
+      log.warn(`Sheets ${label} failed; retrying`, {
+        action: "sheets-retry",
+        attempt,
+        delayMs,
+        err: String(error),
+      }),
+  });
+}
 
 let cached: { sheets: sheets_v4.Sheets; spreadsheetId: string } | null = null;
 
@@ -24,29 +43,39 @@ export function sheetsClient(): { sheets: sheets_v4.Sheets; spreadsheetId: strin
 /** Read a single A1 range's values (rows of strings). */
 export async function getValues(range: string): Promise<string[][]> {
   const { sheets, spreadsheetId } = sheetsClient();
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range,
-    valueRenderOption: "UNFORMATTED_VALUE",
-  });
+  const res = await retried(`get ${range}`, () =>
+    sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range,
+      valueRenderOption: "UNFORMATTED_VALUE",
+    }),
+  );
   return (res.data.values as string[][] | undefined) ?? [];
 }
 
 /** Overwrite a single A1 range with the given rows. */
 export async function updateValues(range: string, values: string[][]): Promise<void> {
   const { sheets, spreadsheetId } = sheetsClient();
-  await sheets.spreadsheets.values.update({
-    spreadsheetId,
-    range,
-    valueInputOption: "RAW",
-    requestBody: { values },
-  });
+  await retried(`update ${range}`, () =>
+    sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range,
+      valueInputOption: "RAW",
+      requestBody: { values },
+    }),
+  );
 }
 
 /** Append rows after the last used row of a tab. */
 export async function appendValues(range: string, values: string[][]): Promise<void> {
   if (values.length === 0) return;
   const { sheets, spreadsheetId } = sheetsClient();
+  // DELIBERATELY NOT RETRIED: if the server committed an append but the
+  // response was lost, a retry would duplicate the rows — and two `new` rows
+  // for the same address could each pass the per-row status guard and
+  // double-send. A transiently failed append just means fewer rows this run;
+  // the next scheduled scrape restocks. (Send-time selection additionally
+  // dedupes by email as defense-in-depth — see core/status.ts.)
   await sheets.spreadsheets.values.append({
     spreadsheetId,
     range,
@@ -59,7 +88,9 @@ export async function appendValues(range: string, values: string[][]): Promise<v
 /** List existing tab titles. */
 export async function listTabs(): Promise<string[]> {
   const { sheets, spreadsheetId } = sheetsClient();
-  const res = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets.properties.title" });
+  const res = await retried("listTabs", () =>
+    sheets.spreadsheets.get({ spreadsheetId, fields: "sheets.properties.title" }),
+  );
   return (res.data.sheets ?? [])
     .map((s) => s.properties?.title)
     .filter((t): t is string => Boolean(t));

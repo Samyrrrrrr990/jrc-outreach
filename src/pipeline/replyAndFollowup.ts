@@ -9,7 +9,7 @@
  */
 import type { Category, Contact } from "../core/types";
 import { CAMPAIGN, CATEGORY_ORDER } from "../config/campaign";
-import { log, RunSummary } from "../core/logger";
+import { log, RunSummary, setLogPhase } from "../core/logger";
 import { assertProofPointsReady } from "../config/proofPoints";
 import { dueForCold, dueForFollowUp, isContactable } from "../core/status";
 import { ensureSchema, readTab } from "../sheets/crm";
@@ -34,9 +34,13 @@ export async function runReplies(dryRun: boolean): Promise<RunSummary> {
     for (const contact of contacts) all.push({ cat, contact });
   }
 
+  setLogPhase("replies");
   await detectReplies(all, summary, dryRun);
+  setLogPhase("followup");
   await sendFollowUps(all, summary, dryRun);
+  setLogPhase("cold");
   await retireCold(all, summary, dryRun);
+  setLogPhase(null);
 
   await finalize(summary, dryRun);
   return summary;
@@ -67,8 +71,8 @@ async function detectReplies(
     incoming = await fetchRecentInbox(14);
   } catch (err) {
     const msg = `inbox fetch failed: ${String(err)}`;
-    log.error(msg);
-    summary.addError(msg);
+    log.error(msg, { action: "inbox-fetch", result: "error" });
+    summary.addError(msg, "inbox");
     return;
   }
 
@@ -127,8 +131,8 @@ async function sendFollowUps(
       }
     } catch (err) {
       const msg = `follow-up ${cat} ${contact.email} failed: ${String(err)}`;
-      log.error(msg);
-      summary.addError(msg);
+      log.error(msg, { category: cat, action: "followup", result: "error" });
+      summary.addError(msg, cat);
       summary.addSkipped("followup-error");
     }
   }

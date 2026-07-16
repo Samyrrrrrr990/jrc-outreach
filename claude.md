@@ -8,10 +8,11 @@ spec.
 ## Commands
 
 ```bash
-npm test           # vitest, 70 tests, no credentials required
+npm test           # vitest, no credentials required
 npm run typecheck  # tsc --noEmit (strict)
 npx tsx src/cli.ts preview profs      # render sample emails, zero config
 npx tsx src/cli.ts doctor             # verify env + Sheets/SMTP/IMAP connectivity
+npx tsx src/cli.ts verify             # probe scrape sources + robots + templates, no creds needed
 npx tsx src/cli.ts run-daily --dry-run
 npx tsx src/cli.ts run-replies --dry-run
 ```

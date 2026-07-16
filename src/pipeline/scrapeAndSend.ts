@@ -9,8 +9,14 @@
 import type { Category, Contact } from "../core/types";
 import { CAMPAIGN, CATEGORY_ORDER, categoryConfig } from "../config/campaign";
 import { todayISO } from "../core/dates";
-import { log, RunSummary } from "../core/logger";
+import { log, RunSummary, setLogPhase } from "../core/logger";
 import { loadEnv } from "../config/env";
+import {
+  alertErrorThreshold,
+  alertsEnabled,
+  shouldSendAlert,
+  trySendAlert,
+} from "../mail/alerts";
 import { assertProofPointsReady } from "../config/proofPoints";
 import { selectForInitial } from "../core/status";
 import { ensureSchema, readTab, appendLogRow } from "../sheets/crm";
@@ -19,15 +25,17 @@ import { sendInitial } from "./sender";
 
 /** Scrape phase: restock every category up to its quota. */
 export async function scrapePhase(summary: RunSummary, dryRun: boolean): Promise<void> {
+  setLogPhase("scrape");
   for (const cat of CATEGORY_ORDER) {
     try {
       await scrapeCategory(cat, summary, dryRun);
     } catch (err) {
       const msg = `scrape ${cat} failed: ${String(err)}`;
-      log.error(msg);
-      summary.addError(msg);
+      log.error(msg, { category: cat, action: "scrape", result: "error" });
+      summary.addError(msg, cat);
     }
   }
+  setLogPhase(null);
 }
 
 /** Send phase: initial emails, honouring per-day quotas and the daily cap. */
@@ -35,6 +43,7 @@ export async function sendInitialsPhase(
   summary: RunSummary,
   dryRun: boolean,
 ): Promise<void> {
+  setLogPhase("send");
   const today = todayISO();
   let capRemaining: number = CAMPAIGN.dailyCap;
 
@@ -65,13 +74,14 @@ export async function sendInitialsPhase(
       } catch (err) {
         // A single bad merge/contact must not abort the whole run.
         const msg = `send ${cat} ${contact.email} failed: ${String(err)}`;
-        log.error(msg);
-        summary.addError(msg);
+        log.error(msg, { category: cat, action: "send", result: "error" });
+        summary.addError(msg, cat);
         summary.addSkipped("send-error");
       }
     }
     if (capRemaining <= 0) break;
   }
+  setLogPhase(null);
 }
 
 /** Full daily job: scrape, then send. */
@@ -105,9 +115,14 @@ export async function runSend(dryRun: boolean): Promise<RunSummary> {
 }
 
 export async function finalize(summary: RunSummary, dryRun: boolean): Promise<void> {
-  log.info(`RUN SUMMARY ${summary.toLine()}`);
+  setLogPhase("finalize");
+  log.info(`RUN SUMMARY ${summary.toLine()}`, summary.toMeta());
   if (summary.errors.length > 0) {
-    log.error(`Run completed with ${summary.errors.length} error(s)`);
+    log.error(`Run completed with ${summary.errors.length} error(s)`, {
+      action: "summary",
+      result: "errors",
+      errors: summary.errors.length,
+    });
   }
   const env = loadEnv();
   if (env.LOG_TO_SHEET && !dryRun) {
@@ -115,4 +130,23 @@ export async function finalize(summary: RunSummary, dryRun: boolean): Promise<vo
       log.warn("Failed to append Log row", { err: String(err) }),
     );
   }
+
+  // A run that completed but hit too many errors in one category is a
+  // failure the operator should hear about without checking Actions.
+  const decision = {
+    enabled: alertsEnabled(),
+    dryRun,
+    fatal: false,
+    errorCount: summary.maxCategoryErrors(),
+    threshold: alertErrorThreshold(),
+  };
+  if (shouldSendAlert(decision)) {
+    await trySendAlert({
+      job: summary.job,
+      kind: "errors",
+      errors: summary.errors,
+      summaryLine: summary.toLine(),
+    });
+  }
+  setLogPhase(null);
 }

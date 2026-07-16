@@ -6,6 +6,7 @@
 import { ImapFlow } from "imapflow";
 import { loadEnv } from "../config/env";
 import { log } from "../core/logger";
+import { withRetry } from "../core/retry";
 import type { IncomingMessage } from "./reply-match";
 
 function newClient(): ImapFlow {
@@ -45,9 +46,24 @@ function tokens(headerValue: string | undefined): string[] {
 
 /**
  * Fetch inbox messages received in the last `sinceDays` days, returning the
- * fields reply-matching needs. Non-fatal on an empty inbox.
+ * fields reply-matching needs. Non-fatal on an empty inbox. The whole
+ * operation is read-only, so a transient connection failure gets one retry.
+ * (appendToSent is deliberately NOT retried — a lost response after a
+ * successful APPEND would duplicate the Sent copy.)
  */
 export async function fetchRecentInbox(sinceDays = 14): Promise<IncomingMessage[]> {
+  return withRetry(() => fetchRecentInboxOnce(sinceDays), {
+    attempts: 2,
+    onRetry: ({ delayMs, error }) =>
+      log.warn("IMAP inbox fetch hiccuped; retrying once", {
+        action: "imap-retry",
+        delayMs,
+        err: String(error),
+      }),
+  });
+}
+
+async function fetchRecentInboxOnce(sinceDays: number): Promise<IncomingMessage[]> {
   const env = loadEnv();
   const client = newClient();
   const out: IncomingMessage[] = [];

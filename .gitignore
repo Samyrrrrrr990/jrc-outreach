@@ -15,3 +15,6 @@ credentials*.json
 .DS_Store
 .idea/
 .vscode/
+
+# CI alert dedup marker (written by src/cli.ts, never committed)
+.alert-sent

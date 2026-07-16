@@ -46,6 +46,14 @@ const EnvSchema = z.object({
   DRY_RUN: boolish.default("false"),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   LOG_TO_SHEET: boolish.default("true"),
+  /** "json" (default in CI) or "pretty" (default locally). */
+  LOG_FORMAT: z.enum(["json", "pretty"]).optional(),
+
+  // Alerting (mail/alerts.ts reads these from process.env directly so alerts
+  // still work when THIS schema is what failed; listed here for validation).
+  ALERT_EMAIL: z.string().email().optional(),
+  ALERT_ON_FAILURE: boolish.optional(),
+  ALERT_ERROR_THRESHOLD: z.coerce.number().int().positive().default(1),
 });
 
 export type Env = z.infer<typeof EnvSchema> & {

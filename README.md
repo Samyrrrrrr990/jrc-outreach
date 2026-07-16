@@ -27,7 +27,7 @@ No component keeps its own separate state.
   │ replies + │ ◄────── │                                         │
   │ follow-up │  write   └─────────────────────────────────────────┘
   └──────────┘
-  every 4h        SMTP send ─► Privatemail ─► IMAP APPEND to Sent
+  every 6h        SMTP send ─► Privatemail ─► IMAP APPEND to Sent
                   IMAP inbox ─► match In-Reply-To / References ─► replied
 ```
 
@@ -37,8 +37,9 @@ Four responsibilities (see `agents.md`), implemented as pure logic + thin I/O:
 |-----|---------|----------|
 | Scraper — restock the CRM with fresh, deduped, provenance-tagged contacts | part of `run-daily` | daily |
 | Sender — send today's quota of personalized initial emails | part of `run-daily` | daily |
-| Reply-check — match inbox mail to sent Message-IDs, mark `replied` | part of `run-replies` | every 4h |
-| Follow-up — one nudge after 3 days, then `cold` after 5 more | part of `run-replies` | every 4h |
+| Reply-check — match inbox mail to sent Message-IDs, mark `replied` | part of `run-replies` | every 6h |
+| Follow-up — one nudge after 3 days, then `cold` after 5 more | part of `run-replies` | every 6h |
+| Source verify — probe every scrape source URL + robots.txt + templates | `verify` | weekly |
 
 Quotas: **20 sponsors + 20 profs + 10 students per day**, hard-capped at **50/day** total.
 
@@ -121,6 +122,11 @@ npx tsx src/cli.ts run-replies
 # Individual phases:
 npx tsx src/cli.ts scrape
 npx tsx src/cli.ts send
+
+# Config health check — probes every scrape-source URL (HTTP 2xx + HTML +
+# robots.txt) and renders every template. Sends nothing, writes nothing,
+# needs no credentials. Exits non-zero if any source is dead.
+npx tsx src/cli.ts verify
 ```
 
 On GitHub Actions the two workflows run on cron and can also be triggered
@@ -170,6 +176,21 @@ will ever touch that row again.
   auto-marked.
 - **Fails loud.** Missing secrets, bad config, or any step error exits non-zero,
   turning the Actions run red instead of silently skipping a day.
+- **Failure alerts to your own inbox.** A failed live run (or one that
+  completes with `ALERT_ERROR_THRESHOLD`+ errors in a category) emails
+  `ALERT_EMAIL` (default: the sender's own address) **via the same SMTP
+  account** — no Slack/PagerDuty/third-party service, nothing extra to pay
+  for. A workflow fallback step covers crashes the process couldn't report
+  itself; a `.alert-sent` marker prevents double alerts.
+- **Structured logs.** In CI every log line is one JSON object
+  (`ts`, `level`, `msg`, `phase`, `category`, `action`, `result`, …) so a
+  failure is diagnosable from the Actions output alone
+  (`LOG_FORMAT=pretty` locally for humans).
+- **Retries transient failures — never sends.** Sheets API rate limits, IMAP
+  reads, and scrape fetches retry with exponential backoff. An email send is
+  **never** retried (exactly-once), and appends are never retried (a lost
+  response could duplicate rows) — plus send-time selection dedupes by email
+  as defense-in-depth, so duplicate rows can never double-send.
 - **Good web citizen.** robots.txt is honored, requests are rate-limited per
   domain, a truthful User-Agent is sent, and every scraped row carries a
   `source_url` you can audit.
@@ -181,16 +202,20 @@ will ever touch that row again.
 ```
 src/
   config/    env (zod-validated), campaign quotas, proof points, scrape sources
-  core/      types, dates, status lifecycle (pure), logger + run summary
+  core/      types, dates, status lifecycle (pure), structured logger, retry
   scrape/    email de-obfuscation, robots.txt, rate-limited fetcher, cheerio parser, dedup
-  mail/      mail-merge, headers, SMTP compose/send, IMAP append/read, reply-matching (pure)
+  mail/      mail-merge, headers, SMTP compose/send, IMAP append/read, reply-matching (pure), alerts
   sheets/    schema mapping (pure), Sheets client, CRM operations
-  pipeline/  scrape+send job, reply+follow-up job, send helpers
-  cli.ts     entry point: run-daily | run-replies | scrape | send | preview | doctor
+  pipeline/  scrape+send job, reply+follow-up job, send helpers, verify
+  cli.ts     entry point: run-daily | run-replies | scrape | send | preview | doctor | verify
 templates/   the six email templates
-test/        70 unit tests over every pure module
-.github/workflows/  daily-outreach.yml, reply-check.yml
+test/        unit tests over every pure module
+.github/workflows/  daily-outreach.yml, reply-check.yml, verify-sources.yml
 ```
+
+All scheduling stays comfortably inside the GitHub Actions free tier
+(2,000 min/month on private repos; unlimited on public): 1 daily run +
+4 reply checks/day + 1 weekly verify ≈ 500 min/month.
 
 All business logic lives in pure, unit-tested functions; the network adapters
 (Sheets/SMTP/IMAP) are thin wrappers around them.

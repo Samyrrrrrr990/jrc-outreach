@@ -59,3 +59,23 @@ jobs:
           LOG_TO_SHEET: "true"
           DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
         run: npx tsx src/cli.ts run-daily
+
+      # Fallback alert for failures the CLI could not email about itself
+      # (npm ci broke, the process crashed, ...). Uses the same SMTP account —
+      # no third-party service. Skipped when the in-process alert already
+      # went out (the CLI writes .alert-sent) or on dry runs.
+      - name: Alert on failure (own SMTP)
+        if: ${{ failure() && inputs.dry_run != true }}
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SENDER_NAME: ${{ secrets.SENDER_NAME }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: |
+          if [ ! -f .alert-sent ]; then
+            npx tsx src/cli.ts alert-failure
+          fi
