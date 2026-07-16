@@ -10,6 +10,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { CATEGORY_ORDER } from "../config/campaign";
+import { activeProfile } from "../config/profiles";
 import { log, setLogPhase } from "../core/logger";
 import { readTab } from "../sheets/crm";
 import { computeMetrics, type MetricsRow } from "./metrics";
@@ -24,7 +25,9 @@ export async function buildDashboard(outDir = "docs"): Promise<void> {
   }
 
   const metrics = computeMetrics(rows);
-  const html = renderDashboardHtml(metrics, { title: "JRC Outreach — dashboard" });
+  const html = renderDashboardHtml(metrics, {
+    title: `${activeProfile().displayName} — dashboard`,
+  });
 
   const htmlPath = join(outDir, "index.html");
   mkdirSync(dirname(htmlPath), { recursive: true });

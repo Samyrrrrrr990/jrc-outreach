@@ -5,9 +5,11 @@
  * unfilled so a contact never gets "Dear ,".
  */
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Contact } from "../core/types";
 import { PROOF_POINTS } from "../config/proofPoints";
+import { activeProfile } from "../config/profiles";
 
 const PLACEHOLDER = /\{\{\s*([\w.]+)\s*\}\}/g;
 
@@ -44,11 +46,14 @@ export function merge(template: string, vars: MergeVars): string {
   return out;
 }
 
-export const TEMPLATE_DIR = fileURLToPath(new URL("../../templates/", import.meta.url));
+const TEMPLATES_ROOT = fileURLToPath(new URL("../../templates/", import.meta.url));
 
-/** Load a template file from /templates by basename. */
+/** The ACTIVE ORG's template folder: templates/<profile.templatesDir>/. */
+export const TEMPLATE_DIR = join(TEMPLATES_ROOT, activeProfile().templatesDir);
+
+/** Load a template file from the active org's template folder by basename. */
 export function loadTemplate(basename: string): string {
-  return readFileSync(TEMPLATE_DIR + basename, "utf8");
+  return readFileSync(join(TEMPLATE_DIR, basename), "utf8");
 }
 
 export interface RenderedEmail {

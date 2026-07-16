@@ -39,7 +39,15 @@ npx tsx src/cli.ts run-replies --dry-run
 
 ## Where things live
 
-- Quotas / cadence / cap: `src/config/campaign.ts`
-- Scrape targets: `src/config/sources.ts`
-- Copy: `templates/*.md` (first line must be `Subject: ...`)
-- Shared stats: `src/config/proofPoints.ts`
+- **Everything org-specific** (quotas, cadence, proof points, scrape targets,
+  templates folder): `src/config/profiles/<org>.ts` — selected via the
+  `ORG_PROFILE` env var. `campaign.ts` / `sources.ts` / `proofPoints.ts` are
+  thin views over the active profile; edit the profile, not the views.
+  A test enforces zero org references in engine code (see MULTI_TENANT.md).
+- Copy: `templates/<org>/*.md` (first line must be `Subject: ...`);
+  A/B variants are sibling files named `<base>.variant-<id>.md`
+- Analytics (pure): `src/analytics/{metrics,dashboard,report}.ts`
+- Alerts go to the operator's own inbox via the existing SMTP account
+  (`src/mail/alerts.ts`) — never add a third-party alerting service.
+- Everything must stay free to run: GitHub Actions free tier, GitHub Pages
+  for the dashboard, the Sheet as the only store. No paid services.

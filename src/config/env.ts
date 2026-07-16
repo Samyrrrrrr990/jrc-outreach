@@ -43,6 +43,8 @@ const EnvSchema = z.object({
   UNSUBSCRIBE_URL: z.string().url().optional(),
 
   // Behaviour
+  /** Which org profile to run as (src/config/profiles/). */
+  ORG_PROFILE: z.string().optional(),
   DRY_RUN: boolish.default("false"),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   LOG_TO_SHEET: boolish.default("true"),

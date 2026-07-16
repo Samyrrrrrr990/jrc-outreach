@@ -89,7 +89,7 @@ export function buildAlertEmail(a: AlertContent): { subject: string; text: strin
     lines.push("");
   }
   if (a.runUrl) lines.push(`Run logs: ${a.runUrl}`);
-  lines.push("", "— jrc-outreach alerting (sent via your own SMTP account)");
+  lines.push("", "— outreach alerting (sent via your own SMTP account)");
   return { subject, text: lines.join("\n") };
 }
 

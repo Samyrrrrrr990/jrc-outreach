@@ -55,14 +55,18 @@ npm test          # 70 unit tests, no credentials needed
 npm run typecheck
 ```
 
-### 2. Fill in your details (two files)
+### 2. Fill in your details (one profile + one templates folder)
 
-- **`src/config/proofPoints.ts`** — your program name, stats, and website.
-  Every value ships as a `«placeholder»`. **Real sends refuse to run until all
-  placeholders are replaced** — this is a safety gate so you can never
-  accidentally email a fabricated statistic.
-- **`templates/*.md`** — the six email templates (initial + follow-up per
-  category). Edit freely; the first line must stay `Subject: ...`. Any
+Everything org-specific lives in your **org profile** —
+`src/config/profiles/<org>.ts`, selected by the `ORG_PROFILE` env var — and
+your templates folder. See `MULTI_TENANT.md` to onboard a brand-new org.
+
+- **Proof points** (in the profile) — program name, stats, website. Every
+  value ships as a `«placeholder»`. **Real sends refuse to run until all
+  placeholders are replaced** — a safety gate so you can never accidentally
+  email a fabricated statistic.
+- **`templates/<org>/*.md`** — the six email templates (initial + follow-up
+  per category). Edit freely; the first line must stay `Subject: ...`. Any
   `{{placeholder}}` you leave unfilled will throw at send time, never send a
   broken email.
 
@@ -74,7 +78,7 @@ npx tsx src/cli.ts preview profs      # or sponsors / students
 
 ### 3. Add scrape targets
 
-Edit **`src/config/sources.ts`**:
+Edit the `sources` block of your **org profile**:
 
 - `DIRECTORY_SOURCES` — public faculty/department/club people-pages (UofT, TMU,
   York, Western…). If a page needs precise extraction, add CSS `selectors`;
@@ -244,7 +248,7 @@ Pages and open `docs/index.html` locally / from the repo view.
 
 ```
 src/
-  config/    env (zod-validated), campaign quotas, proof points, scrape sources
+  config/    env (zod-validated), org profiles (quotas, proof points, sources)
   core/      types, dates, status lifecycle (pure), structured logger, retry
   scrape/    email de-obfuscation, robots.txt, rate-limited fetcher, cheerio parser, dedup
   mail/      mail-merge, headers, SMTP compose/send, IMAP append/read, reply-matching (pure), alerts
