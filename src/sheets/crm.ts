@@ -92,7 +92,19 @@ function colFor(count: number): string {
 /** Read all contacts in a category's tab, skipping (and counting) malformed rows. */
 export async function readTab(cat: Category): Promise<ReadResult> {
   const tab = categoryConfig(cat).tab;
-  const rows = await getValues(`${tab}!A1:${LAST_COL}`);
+  let rows: Awaited<ReturnType<typeof getValues>>;
+  try {
+    rows = await getValues(`${tab}!A1:${LAST_COL}`);
+  } catch (err) {
+    // A tab that doesn't exist holds no contacts. Normal on a virgin sheet
+    // in dry-run, where ensureSchema deliberately creates nothing; verified
+    // against listTabs so every other read failure still throws.
+    if (!(await listTabs()).includes(tab)) {
+      log.info(`Tab "${tab}" does not exist yet; treating it as empty`);
+      return { contacts: [], malformed: 0 };
+    }
+    throw err;
+  }
   const contacts: Contact[] = [];
   let malformed = 0;
   // Row 1 is the header; data starts at sheet row 2.
