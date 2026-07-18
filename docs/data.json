@@ -1,0 +1,403 @@
+{
+  "generatedAt": "2026-07-18T15:11:03.171Z",
+  "windowDays": 30,
+  "totals": {
+    "contacts": 22,
+    "sent": 22,
+    "replied": 0,
+    "bounced": 0,
+    "followedUp": 0,
+    "cold": 0,
+    "pendingNew": 0,
+    "replyRatePct": 0
+  },
+  "byCategory": {
+    "profs": {
+      "contacts": 20,
+      "sent": 20,
+      "replied": 0,
+      "bounced": 0,
+      "followedUp": 0,
+      "cold": 0,
+      "pendingNew": 0,
+      "replyRatePct": 0
+    },
+    "sponsors": {
+      "contacts": 1,
+      "sent": 1,
+      "replied": 0,
+      "bounced": 0,
+      "followedUp": 0,
+      "cold": 0,
+      "pendingNew": 0,
+      "replyRatePct": 0
+    },
+    "students": {
+      "contacts": 1,
+      "sent": 1,
+      "replied": 0,
+      "bounced": 0,
+      "followedUp": 0,
+      "cold": 0,
+      "pendingNew": 0,
+      "replyRatePct": 0
+    }
+  },
+  "daily": [
+    {
+      "date": "2026-06-19",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-20",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-21",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-22",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-23",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-24",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-25",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-26",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-27",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-28",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-29",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-06-30",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-01",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-02",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-03",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-04",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-05",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-06",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-07",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-08",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-09",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-10",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-11",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-12",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-13",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-14",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-15",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-16",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-17",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-18",
+      "sent": {
+        "profs": 20,
+        "sponsors": 1,
+        "students": 1
+      },
+      "replied": 0,
+      "bounced": 0
+    }
+  ],
+  "timeToReply": {
+    "buckets": [
+      {
+        "bucket": "same day",
+        "count": 0
+      },
+      {
+        "bucket": "1 day",
+        "count": 0
+      },
+      {
+        "bucket": "2–3 days",
+        "count": 0
+      },
+      {
+        "bucket": "4–7 days",
+        "count": 0
+      },
+      {
+        "bucket": "8+ days",
+        "count": 0
+      }
+    ],
+    "medianDays": null
+  },
+  "variants": [
+    {
+      "category": "profs",
+      "variant": "b",
+      "sent": 12,
+      "replied": 0,
+      "replyRatePct": 0
+    },
+    {
+      "category": "profs",
+      "variant": "control",
+      "sent": 8,
+      "replied": 0,
+      "replyRatePct": 0
+    },
+    {
+      "category": "sponsors",
+      "variant": "control",
+      "sent": 1,
+      "replied": 0,
+      "replyRatePct": 0
+    },
+    {
+      "category": "students",
+      "variant": "control",
+      "sent": 1,
+      "replied": 0,
+      "replyRatePct": 0
+    }
+  ]
+}
