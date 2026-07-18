@@ -50,8 +50,8 @@ const RULES: Rule[] = [
   },
   {
     name: "credential-assignment",
-    // NAME_PASS=literalvalue / SECRET: "literalvalue" — a bare or quoted
-    // literal of 8+ credential-ish chars right after the assignment.
+    // A bare or quoted literal of 8+ credential-ish chars immediately
+    // following an assignment to a PASS/SECRET/TOKEN/API-KEY-style name.
     pattern: /(PASS(?:WORD)?|SECRET|TOKEN|API_?KEY)["']?\s*[=:]\s*["']?([A-Za-z0-9_\-!@#%^&*+./]{8,})/i,
     exempt: (line, match) => {
       const value = match[2] ?? "";
