@@ -18,3 +18,6 @@ credentials*.json
 
 # CI alert dedup marker (written by src/cli.ts, never committed)
 .alert-sent
+
+# GCP service-account keys by project name (belt & braces with patterns above)
+join-research-*.json

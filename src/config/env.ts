@@ -103,7 +103,14 @@ let cached: Env | null = null;
 /** Parse and cache process.env. Throws a readable aggregate on failure. */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (cached) return cached;
-  const result = EnvSchema.safeParse(source);
+  // An unset `${{ secrets.X }}` in a workflow still defines the env var as
+  // "" (and `KEY=` lines in .env do the same), so empty/whitespace values
+  // must mean "not set" — otherwise optional fields could never be omitted
+  // in CI. Required fields still fail loudly, as absent instead of empty.
+  const cleaned = Object.fromEntries(
+    Object.entries(source).filter(([, v]) => v !== undefined && v.trim() !== ""),
+  );
+  const result = EnvSchema.safeParse(cleaned);
   if (!result.success) {
     const issues = result.error.issues
       .map((i) => `  - ${i.path.join(".")}: ${i.message}`)
