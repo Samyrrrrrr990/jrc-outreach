@@ -62,6 +62,25 @@ export interface RenderedEmail {
 }
 
 /**
+ * Outgoing mail is plain-text ASCII punctuation only: em/en dashes are
+ * normalized away no matter where they came from (template file OR a merge
+ * var like a proof point). A line that is only a dash is a signature
+ * separator and becomes `--`; digit ranges keep a tight hyphen; anything
+ * else becomes a spaced hyphen.
+ */
+export function asciiDashes(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      if (/^\s*[—–]\s*$/.test(line)) return "--";
+      return line
+        .replace(/(\d)\s*[—–]\s*(\d)/g, "$1-$2")
+        .replace(/\s*[—–]\s*/g, " - ");
+    })
+    .join("\n");
+}
+
+/**
  * Build the merge-var map for a contact. Flattens contact fields, the shared
  * proof points, and sender identity into one namespace the templates use.
  */
@@ -94,7 +113,7 @@ export function render(templateBody: string, vars: MergeVars): RenderedEmail {
   if (!m) {
     throw new Error('Template must begin with a "Subject: ..." line');
   }
-  const subject = m[1]!.trim();
-  const body = lines.slice(1).join("\n").replace(/^\s+/, "");
+  const subject = asciiDashes(m[1]!.trim());
+  const body = asciiDashes(lines.slice(1).join("\n").replace(/^\s+/, ""));
   return { subject, text: body };
 }

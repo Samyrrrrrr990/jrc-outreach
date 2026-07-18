@@ -18,7 +18,7 @@ export const jrc: OrgProfile = {
   proofPoints: {
     programName: "Research 101",
     oneLiner:
-      "A free, mentor-led program that gives students real research experience — from finding a research question to working alongside university mentors on real problems, with feedback along the way.",
+      "A free, mentor-led program that gives students real research experience - from finding a research question to working alongside university mentors on real problems, with feedback along the way.",
     studentsServed: "150+",
     /**
      * NOTE: repurposed from "schools reached" to "provinces reached this
@@ -27,7 +27,7 @@ export const jrc: OrgProfile = {
      */
     schoolsReached: "5",
     headlineOutcome:
-      "55 students already signed up across 5 provinces for this cohort, on top of 150+ students helped since we started — plus a 40+ member research club we built that became the fastest-growing club at our founder's school.",
+      "55 students already signed up across 5 provinces for this cohort, on top of 150+ students helped since we started, plus a 40+ member research club we built that became the fastest-growing club at our founder's school.",
     website: "https://joinresearch.ca",
     senderBlurb:
       "Founder of Join Research Canada, a student-led nonprofit helping Canadian students get real research experience through free, mentor-led programs.",

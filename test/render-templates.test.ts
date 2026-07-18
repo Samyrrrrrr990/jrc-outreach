@@ -49,4 +49,12 @@ describe("every shipped template renders with the full variable set", () => {
     expect(out.text).toContain("Ada Lovelace".slice(0, 3)); // merged, not literal
     expect(out.text).not.toMatch(/\{\{.*?\}\}/);
   });
+
+  it.each(templates)("%s renders with no em/en dashes", (file) => {
+    const body = loadTemplate(file);
+    const vars = varsFor(contact, { name: "Sam", email: "sam@jrc.example" }, FILLED);
+    const out = render(body, vars);
+    expect(out.subject).not.toMatch(/[—–]/);
+    expect(out.text).not.toMatch(/[—–]/);
+  });
 });

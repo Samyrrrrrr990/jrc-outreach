@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { findPlaceholders, merge, render } from "../src/mail/templates";
+import { asciiDashes, findPlaceholders, merge, render } from "../src/mail/templates";
 
 describe("findPlaceholders", () => {
   it("lists distinct placeholder names", () => {
@@ -32,7 +32,37 @@ describe("merge — fails loud", () => {
   });
 });
 
+describe("asciiDashes — no em/en dashes in outgoing mail", () => {
+  it("turns a spaced em dash into a spaced hyphen", () => {
+    expect(asciiDashes("no prep needed — I'll work around you")).toBe(
+      "no prep needed - I'll work around you",
+    );
+  });
+  it("turns a tight em dash into a spaced hyphen", () => {
+    expect(asciiDashes("free—forever")).toBe("free - forever");
+  });
+  it("keeps digit ranges tight", () => {
+    expect(asciiDashes("open 9–5 daily")).toBe("open 9-5 daily");
+  });
+  it("turns a dash-only line into a -- signature separator", () => {
+    expect(asciiDashes("Best,\nSam\n—\nunsubscribe note")).toBe(
+      "Best,\nSam\n--\nunsubscribe note",
+    );
+  });
+  it("leaves dash-free text untouched", () => {
+    expect(asciiDashes("plain text, hyphen-ated, --\n")).toBe(
+      "plain text, hyphen-ated, --\n",
+    );
+  });
+});
+
 describe("render", () => {
+  it("normalizes em dashes arriving via merge vars in subject and body", () => {
+    const tpl = "Subject: {{s}}\n\nWe run {{p}}.\n";
+    const out = render(tpl, { s: "quick ask — 15 min", p: "JRC — a collective" });
+    expect(out.subject).toBe("quick ask - 15 min");
+    expect(out.text).toBe("We run JRC - a collective.\n");
+  });
   it("splits Subject line from body and merges both", () => {
     const tpl = "Subject: Hi {{name}}\n\nBody for {{org}}.\n";
     const out = render(tpl, { name: "Jane", org: "UofT" });

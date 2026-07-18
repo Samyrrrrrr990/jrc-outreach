@@ -10,5 +10,5 @@ Best,
 {{senderName}}
 {{senderEmail}}
 
-—
+--
 To stop hearing from me, just reply "unsubscribe" and I won't write again.
