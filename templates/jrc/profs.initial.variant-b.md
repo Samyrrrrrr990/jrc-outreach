@@ -1,12 +1,12 @@
-Subject: Student research help for your {{field}} work?
+Subject: {{cohortSize}} high school students would love to hear about {{field}}
 
 Hi {{name}},
 
-Quick question: could any of your current {{field}} projects at {{org}} use a motivated student contributor this term?
+Quick question: would you be up for telling {{cohortSize}} curious high school students what research in {{field}} actually looks like?
 
-I run {{programName}} - {{oneLiner}} {{headlineOutcome}}
+I run {{programName}} - {{oneLiner}}. The current cohort is full: {{cohortReach}}, all attending free. Past sessions have featured {{pastGuests}}, and a guest spot can be as light as a 20-30 minute interview-style Q&A - I ask the questions, you just talk about your work at {{org}}.
 
-If that could be useful, I'd love 15 minutes whenever suits you - or if a short guest talk for our members is easier, we'd be glad to host you. More at {{website}}.
+If that could be fun, I'd love to find a slot that suits you. More at {{website}}.
 
 Best,
 {{senderName}}

@@ -4,7 +4,7 @@ Hi {{name}},
 
 Just floating this back to the top of your inbox in case it got buried. No worries at all if now isn't the right time - I know the term is busy.
 
-If a 15-minute chat about student involvement in {{field}} could be useful, I'm happy to fit your schedule. If not, no reply needed and I won't follow up again.
+If a guest lecture or a short interview-style Q&A for our {{cohortSize}} registered students could ever fit your schedule, I'd love to make it easy: 20-30 minutes, no prep, we handle everything. If not, no reply needed and I won't follow up again.
 
 Best,
 {{senderName}}

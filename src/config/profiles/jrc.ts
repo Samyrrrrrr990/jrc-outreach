@@ -18,7 +18,7 @@ export const jrc: OrgProfile = {
   proofPoints: {
     programName: "Research 101",
     oneLiner:
-      "A free, mentor-led program that gives students real research experience - from finding a research question to working alongside university mentors on real problems, with feedback along the way.",
+      "a completely free workshop series that teaches high school students how real research works - from finding a research question to presenting findings - with university mentors and guest researchers along the way",
     studentsServed: "150+",
     /**
      * NOTE: repurposed from "schools reached" to "provinces reached this
@@ -27,10 +27,17 @@ export const jrc: OrgProfile = {
      */
     schoolsReached: "5",
     headlineOutcome:
-      "55 students already signed up across 5 provinces for this cohort, on top of 150+ students helped since we started, plus a 40+ member research club we built that became the fastest-growing club at our founder's school.",
+      "our current cohort hit its full 150-student target: 150 high school students registered from 5 provinces and 2 US states, 25 of them in the past 2 days alone",
     website: "https://joinresearch.ca",
     senderBlurb:
       "Founder of Join Research Canada, a student-led nonprofit helping Canadian students get real research experience through free, mentor-led programs.",
+    // ---- extra merge keys used by the jrc templates (update as numbers move) --
+    cohortSize: "150",
+    cohortReach: "150 high school students from 5 provinces and 2 US states",
+    recentMomentum: "25 new registrations in the past 2 days",
+    pastGuests: "MIT PhD candidates and TMU professors",
+    symposiumPitch:
+      "the biggest, most accessible research symposium in downtown Toronto - open to both university and high school students, with cash prizes, internship opportunities, and one-of-a-kind workshops",
   },
 
   campaign: {
@@ -49,13 +56,13 @@ export const jrc: OrgProfile = {
       },
       sponsors: {
         tab: "Sponsors",
-        dailyQuota: 20,
+        dailyQuota: 10,
         initialTemplate: "sponsors.initial.md",
         followUpTemplate: "sponsors.followup.md",
       },
       students: {
         tab: "Students",
-        dailyQuota: 10,
+        dailyQuota: 20,
         initialTemplate: "students.initial.md",
         followUpTemplate: "students.followup.md",
       },
