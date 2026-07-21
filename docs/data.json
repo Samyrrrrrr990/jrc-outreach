@@ -1,33 +1,33 @@
 {
-  "generatedAt": "2026-07-20T16:00:19.973Z",
+  "generatedAt": "2026-07-21T15:51:46.813Z",
   "windowDays": 30,
   "totals": {
-    "contacts": 62,
-    "sent": 62,
-    "replied": 0,
+    "contacts": 82,
+    "sent": 82,
+    "replied": 3,
     "bounced": 0,
-    "followedUp": 0,
+    "followedUp": 20,
     "cold": 0,
     "pendingNew": 0,
-    "replyRatePct": 0
+    "replyRatePct": 3.7
   },
   "byCategory": {
     "profs": {
-      "contacts": 60,
-      "sent": 60,
-      "replied": 0,
+      "contacts": 80,
+      "sent": 80,
+      "replied": 2,
       "bounced": 0,
-      "followedUp": 0,
+      "followedUp": 19,
       "cold": 0,
       "pendingNew": 0,
-      "replyRatePct": 0
+      "replyRatePct": 2.5
     },
     "sponsors": {
       "contacts": 1,
       "sent": 1,
       "replied": 0,
       "bounced": 0,
-      "followedUp": 0,
+      "followedUp": 1,
       "cold": 0,
       "pendingNew": 0,
       "replyRatePct": 0
@@ -35,25 +35,15 @@
     "students": {
       "contacts": 1,
       "sent": 1,
-      "replied": 0,
+      "replied": 1,
       "bounced": 0,
       "followedUp": 0,
       "cold": 0,
       "pendingNew": 0,
-      "replyRatePct": 0
+      "replyRatePct": 100
     }
   },
   "daily": [
-    {
-      "date": "2026-06-21",
-      "sent": {
-        "profs": 0,
-        "sponsors": 0,
-        "students": 0
-      },
-      "replied": 0,
-      "bounced": 0
-    },
     {
       "date": "2026-06-22",
       "sent": {
@@ -341,7 +331,17 @@
         "sponsors": 0,
         "students": 0
       },
-      "replied": 0,
+      "replied": 2,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-21",
+      "sent": {
+        "profs": 20,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 1,
       "bounced": 0
     }
   ],
@@ -349,7 +349,7 @@
     "buckets": [
       {
         "bucket": "same day",
-        "count": 0
+        "count": 1
       },
       {
         "bucket": "1 day",
@@ -357,7 +357,7 @@
       },
       {
         "bucket": "2–3 days",
-        "count": 0
+        "count": 2
       },
       {
         "bucket": "4–7 days",
@@ -368,22 +368,22 @@
         "count": 0
       }
     ],
-    "medianDays": null
+    "medianDays": 2
   },
   "variants": [
     {
       "category": "profs",
       "variant": "b",
-      "sent": 32,
-      "replied": 0,
-      "replyRatePct": 0
+      "sent": 40,
+      "replied": 1,
+      "replyRatePct": 2.5
     },
     {
       "category": "profs",
       "variant": "control",
-      "sent": 28,
-      "replied": 0,
-      "replyRatePct": 0
+      "sent": 40,
+      "replied": 1,
+      "replyRatePct": 2.5
     },
     {
       "category": "sponsors",
@@ -396,8 +396,8 @@
       "category": "students",
       "variant": "control",
       "sent": 1,
-      "replied": 0,
-      "replyRatePct": 0
+      "replied": 1,
+      "replyRatePct": 100
     }
   ]
 }
