@@ -17,27 +17,29 @@ export const jrc: OrgProfile = {
    */
   proofPoints: {
     programName: "Research 101",
+    // Used in the signature ("The founder, {{orgName}}") and the From line —
+    // outgoing mail is signed by the org, never by an individual's name.
+    orgName: "Join Research Canada",
     oneLiner:
-      "a completely free workshop series that teaches high school students how real research works - from finding a research question to presenting findings - with university mentors and guest researchers along the way",
+      "a completely free, fully online workshop series that teaches high school students how real research works - from finding a research question to presenting findings - with university mentors and guest researchers along the way",
     studentsServed: "150+",
-    /**
-     * NOTE: repurposed from "schools reached" to "provinces reached this
-     * cohort" — we don't have a verified schools-reached count yet, but we do
-     * have a verified provinces count for the current signed-up cohort.
-     */
-    schoolsReached: "5",
+    // Reach descriptor for the current, global online cohort.
+    schoolsReached: "5 continents",
     headlineOutcome:
-      "our current cohort hit its full 150-student target: 150 high school students registered from 5 provinces and 2 US states, 25 of them in the past 2 days alone",
+      "150 high school students are already registered for the current cohort, and we're projecting 300 across 5 continents by the end of the term - every one of them attending free, fully online",
     website: "https://joinresearch.ca",
+    // Follows the "The founder, Join Research Canada" signature line, so it
+    // describes the org rather than repeating the founder title.
     senderBlurb:
-      "Founder of Join Research Canada, a student-led nonprofit helping Canadian students get real research experience through free, mentor-led programs.",
+      "A student-led nonprofit helping students everywhere get real research experience through free, mentor-led online programs.",
     // ---- extra merge keys used by the jrc templates (update as numbers move) --
     cohortSize: "150",
-    cohortReach: "150 high school students from 5 provinces and 2 US states",
-    recentMomentum: "25 new registrations in the past 2 days",
+    cohortReach:
+      "150 students already registered, and we're projecting 300 across 5 continents this cohort, all attending free",
+    recentMomentum: "new registrations now arriving from 5 continents",
     pastGuests: "MIT PhD candidates and TMU professors",
     symposiumPitch:
-      "the biggest, most accessible research symposium in downtown Toronto - open to both university and high school students, with cash prizes, internship opportunities, and one-of-a-kind workshops",
+      "the biggest, most accessible online research symposium yet - open to both university and high school students, with cash prizes, internship opportunities, and one-of-a-kind workshops",
   },
 
   campaign: {
@@ -83,6 +85,16 @@ export const jrc: OrgProfile = {
         url: "https://web.cs.toronto.edu/people/faculty-directory",
         org: "University of Toronto",
         defaultField: "Computer Science",
+        // Each faculty row is a <tr>: an <a> with the person's name, a separate
+        // mailto <a>, then a "<b>Research Areas:</b> ..." cell. Without these
+        // selectors the generic parser grabbed the "Research Areas:" label as
+        // the name for EVERY prof. Pull the real name + real research area.
+        selectors: {
+          item: "table.blueTable tr",
+          name: 'a:not([href^="mailto:"])',
+          email: 'a[href^="mailto:"]',
+          fieldFromLabel: "Research Areas:",
+        },
       },
       {
         category: "profs",
@@ -105,49 +117,115 @@ export const jrc: OrgProfile = {
         org: "Western University",
         defaultField: "Biology",
       },
-      {
-        category: "profs",
-        // NOTE: this is a search portal, not a flat listing — it likely needs
-        // form handling rather than a single-page scrape. Kept for visibility.
-        label: "York — Faculty of Science, search all profiles (NEEDS FORM HANDLING)",
-        url: "https://www.yorku.ca/science/profiles/search-all-profiles/",
-        org: "York University",
-        defaultField: "Science",
-      },
+      // REMOVED 2026-07-22: York "search all profiles" is a form-driven portal
+      // (single-page scrape yields nothing) and the flat faculty listing 404s.
+      // TMU/Queen's/UTSU-style directory pages that only publish office
+      // inboxes are also not useful for the profs channel.
 
       // ----------------------------- STUDENTS -------------------------------
+      // Club/association pages with a PUBLIC general inbox (verified present
+      // in the page HTML on 2026-07-22). `orgContact: true` means: take the
+      // published inbox(es), label the row with the club in `org`, and greet
+      // "Hi {{org}} team," — never an individual student's address. Keep
+      // `org` short; it is the greeting.
       {
         category: "students",
         label: "UofT — Undergraduate Research Students' Association (URSA)",
         url: "https://sop.utoronto.ca/group/uoft-undergraduate-research-students-association-uoft-ursa/",
-        org: "University of Toronto",
-        defaultField: "Undergraduate Research",
-        // NOTE: lists exec names/titles; the generic parser only captures rows
-        // with a real mailto. May need the club's general contact instead.
+        org: "UofT URSA",
+        defaultField: "undergraduate research",
+        orgContact: true,
+      },
+      {
+        category: "students",
+        label: "UofT — Arts & Science Students' Union (ASSU)",
+        url: "https://assu.ca/wp/contact/",
+        org: "UofT ASSU",
+        defaultField: "arts and science",
+        orgContact: true,
+      },
+      {
+        category: "students",
+        label: "Waterloo — Science Society club directory (many club inboxes)",
+        url: "https://scisoc.uwaterloo.ca/contact/",
+        org: "Waterloo Science Society",
+        defaultField: "science",
+        orgContact: true,
+      },
+      {
+        category: "students",
+        label: "Queen's — Arts & Science Undergraduate Society (ASUS)",
+        url: "https://www.queensasus.com/",
+        org: "Queen's ASUS",
+        defaultField: "arts and science",
+        orgContact: true,
+      },
+      {
+        category: "students",
+        label: "UofT — Engineering Society (Skule)",
+        url: "https://skule.ca/",
+        org: "UofT Engineering Society",
+        defaultField: "engineering",
+        orgContact: true,
+      },
+      {
+        category: "students",
+        label: "UofT — Students' Union (UTSU)",
+        url: "https://www.utsu.ca/contact/",
+        org: "UTSU",
+        defaultField: "student leadership",
+        orgContact: true,
       },
     ],
+    // The sponsors channel is journals-first: the Symposium's prizes include
+    // publication opportunities, so student research journals are the partners
+    // that matter most. Every `email` below was verified PUBLISHED on the page
+    // in `source_url` on 2026-07-22 — never hand-enter an address you have not
+    // seen on the org's own public page. `name` doubles as the greeting
+    // ("Hi {{name}},"), so keep it team-shaped.
     sponsorSeeds: [
-      // DISABLED 2026-07-15: letstalkscience.ca returns HTTP 403 to our bot
-      // User-Agent (found by `cli.ts verify`) — it refuses automated access.
-      // Respect that; reach out manually instead.
       {
-        name: "Partnerships Team",
-        org: "Actua",
-        field:
-          "Canada's largest STEM youth-outreach charity — network of 40+ university/college members",
-        contactUrl: "https://actua.ca/contact-us",
-        source_url: "https://actua.ca/contact-us",
+        name: "Journal of High School Science team",
+        org: "The Journal of High School Science",
+        field: "publishing peer-reviewed high school research",
+        email: "journalofhighschoolscience@gmail.com",
+        source_url: "https://jhss.scholasticahq.com/",
       },
       {
-        name: "Development / Support Team",
-        org: "Shad Canada",
-        field:
-          "Longest-running STEAM + entrepreneurship program for high schoolers — corporate/foundation donors",
-        contactUrl: "https://www.shad.ca/support/",
-        source_url: "https://www.shad.ca/support/",
+        name: "IJHSR editorial team",
+        org: "International Journal of High School Research",
+        field: "publishing high school research across the sciences",
+        email: "info@geniusolympiad.org",
+        source_url: "https://ijhighschoolresearch.org/",
       },
-      // TODO (unverified — do NOT hand-fill emails/URLs without checking):
-      // Toyota Canada Foundation, NWMO outreach, Ontario Genomics, Mitacs.
+      {
+        name: "Curieux editorial team",
+        org: "Curieux Academic Journal",
+        field: "publishing work by middle and high school researchers",
+        email: "cajjournal@gmail.com",
+        source_url: "https://www.curieuxacademicjournal.com/",
+      },
+      {
+        name: "NHSJS editorial team",
+        org: "National High School Journal of Science",
+        field: "peer-reviewed publishing for high school scientists",
+        email: "submissions@nhsjs.com",
+        source_url: "https://nhsjs.com/contact/",
+      },
+      {
+        name: "Young Scientists Journal team",
+        org: "Young Scientists Journal",
+        field: "student-run science publishing for 12-20 year olds",
+        email: "chief.editor@ysjournal.com",
+        source_url: "https://www.youngscientistsjournal.com/contact",
+      },
+      // Already contacted manually or by earlier runs — do not re-seed:
+      //   Shad Canada (mary@shad.ca, emailed + followed up 2026-07).
+      // Form-only contact pages (no published inbox; reach out manually):
+      //   Actua, Let's Talk Science (403s our bot), Youth Science Canada,
+      //   Journal of Emerging Investigators, Journal of Student Research,
+      //   Journal of Young Investigators, URNCST Journal, McMaster Science
+      //   Society, Canadian Science Fair Journal.
     ],
   },
 };

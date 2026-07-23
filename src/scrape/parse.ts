@@ -13,38 +13,59 @@ import type { AnyNode } from "domhandler";
 import type { ScrapedContact } from "../core/types";
 import type { DirectorySource } from "../config/sources";
 import { extractEmails, extractMailto, looksLikeEmail, normalizeEmail } from "./email";
+import { isPersonName } from "../core/names";
 
 function clean(s: string | undefined | null): string {
   return (s ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** Common link/label words that are never a person's name. */
-const LABEL_WORDS = new Set([
-  "contact",
-  "email",
-  "e-mail",
-  "mail",
-  "website",
-  "web",
-  "profile",
-  "homepage",
-  "home",
-  "page",
-  "link",
-  "here",
-  "more",
-  "bio",
-  "cv",
-]);
-
-/** A name is plausible if it has letters, reasonable length, and isn't an email. */
+/**
+ * A name is plausible only if it credibly looks like a real person (shared
+ * heuristic in core/names.ts). This is what stops page labels such as
+ * "Research Areas:" or "Socials" from ever being scraped in as a name.
+ */
 function plausibleName(s: string): boolean {
-  const t = clean(s);
-  if (t.length < 2 || t.length > 80) return false;
-  if (looksLikeEmail(t)) return false;
-  if (!/[A-Za-z]/.test(t)) return false;
-  if (LABEL_WORDS.has(t.toLowerCase())) return false;
-  return true;
+  return isPersonName(clean(s));
+}
+
+/**
+ * Extract the field from the text that follows a bold/`<dt>` label inside an
+ * item, e.g. `<b>Research Areas:</b> human-computer interaction, ICTD` ->
+ * "human-computer interaction". Returns "" if the label isn't present.
+ */
+function fieldFromLabel(
+  $: CheerioAPI,
+  item: Cheerio<AnyNode>,
+  label: string,
+): string {
+  const wanted = label.toLowerCase().replace(/[:\s]+$/g, "");
+  let field = "";
+  item.find("b, strong, dt, .label").each((_i, node) => {
+    const el = $(node);
+    if (clean(el.text()).toLowerCase().replace(/[:\s]+$/g, "") !== wanted) return true;
+    const container = el.closest("td, li, p, div, dd, dl");
+    const full = clean((container.length ? container : el.parent()).text());
+    const idx = full.toLowerCase().indexOf(wanted);
+    if (idx < 0) return true;
+    let rest = full.slice(idx + wanted.length).replace(/^[:\s]+/, "");
+    // Stop at the next directory sub-label, a sentence boundary, or an
+    // honorific that starts a trailing note ("... Professor X is not
+    // accepting any new graduate students.") so neither a following label nor
+    // a note ever rides along inside the field. The label list is explicit
+    // because a field that itself starts with a capital ("Systems") must not
+    // be mistaken for the start of a label.
+    // No \b before the label group: adjacent tags collapse to glued text
+    // ("computer graphicsResearch Interests:"), which must still stop.
+    const stop = rest.search(
+      /(?:Research\s+(?:Interests?|Areas?)|Office(?:\s+Hours)?|Room|Phone|Fax|Website|Lab|Email)\s*:|\.\s|\b(?:Professor|Prof\.?|Dr\.?)\s/,
+    );
+    if (stop > 0) rest = rest.slice(0, stop);
+    // Keep the first, most specific clause; tidy trailing punctuation.
+    field = clean(rest).replace(/[;,].*$/, "").replace(/\.$/, "").trim();
+    if (field) return false; // found it; stop iterating
+    return true;
+  });
+  return field;
 }
 
 /**
@@ -95,7 +116,11 @@ function parseWithSelectors(
     const name = sel.name ? clean(item.find(sel.name).first().text()) : nameNear($, item);
     if (!plausibleName(name)) return;
 
-    const field = sel.field ? clean(item.find(sel.field).first().text()) : "";
+    const field = sel.field
+      ? clean(item.find(sel.field).first().text())
+      : sel.fieldFromLabel
+        ? fieldFromLabel($, item, sel.fieldFromLabel)
+        : "";
     out.push({
       email: normalizeEmail(email),
       name,
@@ -153,14 +178,47 @@ function parseGeneric(
   return out;
 }
 
+/**
+ * Org-level page (a club/association/general inbox): emit the public general
+ * email(s), labelled with the org, without requiring a person's name. The
+ * student channel greets "Hi <org> team," so no individual name is needed —
+ * and we still never invent an address, only surface ones the page publishes.
+ */
+function parseOrgContact($: CheerioAPI, source: DirectorySource): ScrapedContact[] {
+  const out: ScrapedContact[] = [];
+  const seen = new Set<string>();
+  // mailto: hrefs ONLY. Free-text extraction on contact pages manufactures
+  // corrupt addresses out of surrounding prose and dot-leader layouts
+  // ("contactuoftursa@gmail.com", "..layla@assu.ca") — a mailto href is the
+  // page's own machine-readable statement of the address.
+  const emails = $('a[href^="mailto:"]')
+    .map((_i, node) => extractMailto($(node).attr("href")))
+    .get();
+  for (const raw of emails) {
+    const email = raw ? normalizeEmail(raw) : "";
+    if (!email || !looksLikeEmail(email) || seen.has(email)) continue;
+    seen.add(email);
+    out.push({
+      email,
+      name: source.org, // org-level contact, greeted by org — not a person
+      org: source.org,
+      field: source.defaultField,
+      source_url: source.url,
+    });
+  }
+  return out;
+}
+
 export function parseDirectory(
   html: string,
   source: DirectorySource,
 ): ScrapedContact[] {
   const $ = cheerio.load(html);
-  const raw = source.selectors?.item
-    ? parseWithSelectors($, source)
-    : parseGeneric($, source);
+  const raw = source.orgContact
+    ? parseOrgContact($, source)
+    : source.selectors?.item
+      ? parseWithSelectors($, source)
+      : parseGeneric($, source);
 
   // Dedupe within this page by normalised email.
   const seen = new Set<string>();

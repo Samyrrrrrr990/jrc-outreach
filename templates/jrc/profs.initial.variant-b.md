@@ -1,15 +1,15 @@
 Subject: {{cohortSize}} high school students would love to hear about {{field}}
 
-Hi {{name}},
+Hi {{firstName}},
 
-Quick question: would you be up for telling {{cohortSize}} curious high school students what research in {{field}} actually looks like?
+Quick question: would you be up for telling a room of curious high school students what research in {{field}} actually looks like?
 
-I run {{programName}} - {{oneLiner}}. The current cohort is full: {{cohortReach}}, all attending free. Past sessions have featured {{pastGuests}}, and a guest spot can be as light as a 20-30 minute interview-style Q&A - I ask the questions, you just talk about your work at {{org}}.
+I run {{programName}} - {{oneLiner}}. {{cohortReach}}. Past sessions have featured {{pastGuests}}, and a guest spot can be as light as a 30-minute interview-style Q&A, fully online - I ask the questions, you just talk about your work at {{org}}.
 
 If that could be fun, I'd love to find a slot that suits you. More at {{website}}.
 
 Best,
-{{senderName}}
+The founder, {{orgName}}
 {{senderBlurb}}
 {{senderEmail}}
 

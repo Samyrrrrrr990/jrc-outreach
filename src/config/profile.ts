@@ -61,12 +61,26 @@ export interface DirectorySource {
   org: string;
   /** Default field/department if the page has no per-person field. */
   defaultField: string;
+  /**
+   * Org-level contact page (a club/association/general inbox), not a roster of
+   * individuals. Emit the public general email(s) labelled with the org rather
+   * than requiring a person's name — used for the student channel, which greets
+   * "Hi <org> team," instead of by first name. Never invents an email.
+   */
+  orgContact?: boolean;
   /** Optional CSS selectors to scope extraction to real rows. */
   selectors?: {
     item: string;
     name?: string;
     email?: string;
     field?: string;
+    /**
+     * Capture the field from the text that follows a bold/`<dt>` label inside
+     * the item, e.g. `"Research Areas:"` -> "human-computer interaction". Used
+     * when the real research area sits next to a label rather than in its own
+     * element. Ignored if `field` is set.
+     */
+    fieldFromLabel?: string;
   };
 }
 

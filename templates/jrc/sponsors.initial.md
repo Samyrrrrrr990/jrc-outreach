@@ -12,7 +12,7 @@ We're the fastest-growing student research organization in Canada right now:
 
 And we're just getting started. Once the workshops wrap, we're planning {{symposiumPitch}}.
 
-That's where a partner comes in: cash prizes, student internship opportunities, and venue and workshop costs. Everything we run is free for students, so sponsors are what make it possible.
+That's where a partner like {{org}} comes in. The doors we most want to open for students: publication - a real home for the symposium's strongest work - plus internship pipelines and the funding that keeps every session free. Everything we run is free for students, so partners are what make it possible.
 
 Would you be open to a short call to explore whether a partnership makes sense? I'll keep it to 15 minutes and come prepared with specifics.
 
@@ -21,7 +21,7 @@ More about us: {{website}}
 Thanks for considering it.
 
 Best,
-{{senderName}}
+The founder, {{orgName}}
 {{senderBlurb}}
 {{senderEmail}}
 

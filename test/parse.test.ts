@@ -71,6 +71,25 @@ describe("parseDirectory — generic strategy", () => {
     expect(out).toEqual([]);
   });
 
+  it("emits club/general inboxes labelled by org when orgContact is set", () => {
+    const html = `
+      <div class="club">
+        <h1>Undergraduate Research Association</h1>
+        <p>Reach our team: <a href="mailto:ursa@example.edu">Socials</a></p>
+        <p>President...............president@example.edu</p>
+        <p>contactursa@example.edu</p>
+      </div>`;
+    const out = parseDirectory(html, { ...base, category: "students", orgContact: true });
+    expect(out).toHaveLength(1);
+    // The junk "Socials" label is discarded; the row is labelled by org so the
+    // greeting becomes "Hi Example University team,".
+    expect(out[0]).toMatchObject({
+      email: "ursa@example.edu",
+      name: "Example University",
+      org: "Example University",
+    });
+  });
+
   it("dedupes repeated emails within a page", () => {
     const html = `
       <div class="card"><h3>Dup One</h3><a href="mailto:dup@example.edu">a</a></div>

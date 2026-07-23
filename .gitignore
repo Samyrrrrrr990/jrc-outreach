@@ -21,3 +21,6 @@ credentials*.json
 
 # GCP service-account keys by project name (belt & braces with patterns above)
 join-research-*.json
+
+# Sheet exports downloaded for local inspection — contact data stays out of git
+Emails - *.csv

@@ -1,13 +1,13 @@
 Subject: Re: Mentor {{cohortSize}} high school researchers with {{programName}}?
 
-Hi {{name}},
+Hi {{org}} team,
 
-Just bumping my earlier note in case it slipped by. We're matching mentors to our {{cohortSize}} registered students now, and I'd love for {{org}} to be part of it - even 10 minutes to chat works.
+Just bumping my earlier note in case it slipped by. We're matching mentors to our {{cohortSize}} registered students now - it's just 1-2 hours a week for 4 weeks, all online - and I'd love for {{org}} to be part of it. Even 10 minutes to chat works.
 
 If it's not for you, no reply needed and I'll leave it here.
 
 Best,
-{{senderName}}
+The founder, {{orgName}}
 {{senderEmail}}
 
 --

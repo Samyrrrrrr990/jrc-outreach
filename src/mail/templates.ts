@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import type { Contact } from "../core/types";
 import { PROOF_POINTS } from "../config/proofPoints";
 import { activeProfile } from "../config/profiles";
+import { firstNameOf } from "../core/names";
 
 const PLACEHOLDER = /\{\{\s*([\w.]+)\s*\}\}/g;
 
@@ -91,6 +92,11 @@ export function varsFor(
 ): MergeVars {
   return {
     name: contact.name,
+    // Given name for the greeting. Resolves to "" when contact.name is not a
+    // real person (a scraped page label like "Research Areas:"), so any
+    // template that greets with {{firstName}} throws "unfilled placeholder"
+    // and the contact is skipped instead of emailed "Hi Research Areas,".
+    firstName: firstNameOf(contact.name),
     org: contact.org,
     field: contact.field,
     email: contact.email,

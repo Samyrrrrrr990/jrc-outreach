@@ -46,7 +46,8 @@ describe("every shipped template renders with the full variable set", () => {
     const vars = varsFor(contact, { name: "Sam", email: "sam@jrc.example" }, FILLED);
     const out = render(body, vars);
     expect(out.subject.length).toBeGreaterThan(0);
-    expect(out.text).toContain("Ada Lovelace".slice(0, 3)); // merged, not literal
+    expect(out.text).toContain("sam@jrc.example"); // senderEmail merged in, not literal
+    expect(out.text).not.toMatch(/^Sam$/m); // signature carries no personal name line
     expect(out.text).not.toMatch(/\{\{.*?\}\}/);
   });
 

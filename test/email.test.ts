@@ -73,3 +73,15 @@ describe("extractEmails — never invents addresses", () => {
     expect(extractEmails("Reach me at reception please")).toEqual([]);
   });
 });
+
+describe("looksLikeEmail — rejects glued page-formatting junk", () => {
+  it("rejects local parts with leading, trailing, or doubled dots", () => {
+    expect(looksLikeEmail("..layla@assu.ca")).toBe(false);
+    expect(looksLikeEmail(".president@assu.ca")).toBe(false);
+    expect(looksLikeEmail("dean.@assu.ca")).toBe(false);
+    expect(looksLikeEmail("liu.....................quintina@assu.ca")).toBe(false);
+  });
+  it("still accepts ordinary dotted locals", () => {
+    expect(looksLikeEmail("first.last@example.ca")).toBe(true);
+  });
+});

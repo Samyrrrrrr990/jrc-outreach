@@ -20,7 +20,12 @@
 const STRICT_EMAIL = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 
 export function looksLikeEmail(s: string): boolean {
-  return STRICT_EMAIL.test(s);
+  if (!STRICT_EMAIL.test(s)) return false;
+  // A local part that starts/ends with "." or contains ".." is invalid per
+  // RFC 5321 — and in practice means page formatting glued onto a real
+  // address ("..layla@assu.ca" from a dot-leader contact table). Junk.
+  const local = s.slice(0, s.indexOf("@"));
+  return !local.startsWith(".") && !local.endsWith(".") && !local.includes("..");
 }
 
 /** Lowercase + trim; strip a leading mailto: and any ?query. */
