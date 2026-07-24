@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-07-23T16:01:42.834Z",
+  "generatedAt": "2026-07-24T15:42:42.587Z",
   "windowDays": 30,
   "totals": {
     "contacts": 142,
     "sent": 142,
-    "replied": 8,
+    "replied": 10,
     "bounced": 0,
-    "followedUp": 57,
+    "followedUp": 73,
     "cold": 5,
     "pendingNew": 0,
-    "replyRatePct": 5.6
+    "replyRatePct": 7
   },
   "byCategory": {
     "profs": {
       "contacts": 120,
       "sent": 120,
-      "replied": 7,
+      "replied": 9,
       "bounced": 0,
-      "followedUp": 56,
+      "followedUp": 72,
       "cold": 5,
       "pendingNew": 0,
-      "replyRatePct": 5.8
+      "replyRatePct": 7.5
     },
     "sponsors": {
       "contacts": 6,
@@ -44,16 +44,6 @@
     }
   },
   "daily": [
-    {
-      "date": "2026-06-24",
-      "sent": {
-        "profs": 0,
-        "sponsors": 0,
-        "students": 0
-      },
-      "replied": 0,
-      "bounced": 0
-    },
     {
       "date": "2026-06-25",
       "sent": {
@@ -341,6 +331,16 @@
         "sponsors": 5,
         "students": 15
       },
+      "replied": 2,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-24",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
       "replied": 1,
       "bounced": 0
     }
@@ -349,7 +349,7 @@
     "buckets": [
       {
         "bucket": "same day",
-        "count": 4
+        "count": 5
       },
       {
         "bucket": "1 day",
@@ -357,7 +357,7 @@
       },
       {
         "bucket": "2–3 days",
-        "count": 3
+        "count": 4
       },
       {
         "bucket": "4–7 days",
@@ -375,8 +375,8 @@
       "category": "profs",
       "variant": "b",
       "sent": 61,
-      "replied": 3,
-      "replyRatePct": 4.9
+      "replied": 5,
+      "replyRatePct": 8.2
     },
     {
       "category": "profs",
