@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-07-24T15:42:42.587Z",
+  "generatedAt": "2026-07-25T15:17:14.247Z",
   "windowDays": 30,
   "totals": {
     "contacts": 142,
     "sent": 142,
     "replied": 10,
     "bounced": 0,
-    "followedUp": 73,
+    "followedUp": 88,
     "cold": 5,
     "pendingNew": 0,
     "replyRatePct": 7
@@ -17,7 +17,7 @@
       "sent": 120,
       "replied": 9,
       "bounced": 0,
-      "followedUp": 72,
+      "followedUp": 87,
       "cold": 5,
       "pendingNew": 0,
       "replyRatePct": 7.5
@@ -44,16 +44,6 @@
     }
   },
   "daily": [
-    {
-      "date": "2026-06-25",
-      "sent": {
-        "profs": 0,
-        "sponsors": 0,
-        "students": 0
-      },
-      "replied": 0,
-      "bounced": 0
-    },
     {
       "date": "2026-06-26",
       "sent": {
@@ -342,6 +332,16 @@
         "students": 0
       },
       "replied": 1,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-25",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
       "bounced": 0
     }
   ],
