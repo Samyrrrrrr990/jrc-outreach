@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-07-27T16:33:08.583Z",
+  "generatedAt": "2026-07-28T16:14:37.619Z",
   "windowDays": 30,
   "totals": {
     "contacts": 142,
     "sent": 142,
-    "replied": 11,
+    "replied": 12,
     "bounced": 0,
-    "followedUp": 87,
-    "cold": 44,
+    "followedUp": 68,
+    "cold": 62,
     "pendingNew": 0,
-    "replyRatePct": 7.7
+    "replyRatePct": 8.5
   },
   "byCategory": {
     "profs": {
@@ -17,8 +17,8 @@
       "sent": 120,
       "replied": 9,
       "bounced": 0,
-      "followedUp": 68,
-      "cold": 43,
+      "followedUp": 50,
+      "cold": 61,
       "pendingNew": 0,
       "replyRatePct": 7.5
     },
@@ -35,25 +35,15 @@
     "students": {
       "contacts": 16,
       "sent": 16,
-      "replied": 2,
+      "replied": 3,
       "bounced": 0,
-      "followedUp": 14,
+      "followedUp": 13,
       "cold": 0,
       "pendingNew": 0,
-      "replyRatePct": 12.5
+      "replyRatePct": 18.8
     }
   },
   "daily": [
-    {
-      "date": "2026-06-28",
-      "sent": {
-        "profs": 0,
-        "sponsors": 0,
-        "students": 0
-      },
-      "replied": 0,
-      "bounced": 0
-    },
     {
       "date": "2026-06-29",
       "sent": {
@@ -341,7 +331,17 @@
         "sponsors": 0,
         "students": 0
       },
-      "replied": 1,
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-07-28",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 2,
       "bounced": 0
     }
   ],
@@ -361,14 +361,14 @@
       },
       {
         "bucket": "4–7 days",
-        "count": 2
+        "count": 3
       },
       {
         "bucket": "8+ days",
         "count": 0
       }
     ],
-    "medianDays": 2
+    "medianDays": 2.5
   },
   "variants": [
     {
@@ -396,8 +396,8 @@
       "category": "students",
       "variant": "control",
       "sent": 16,
-      "replied": 2,
-      "replyRatePct": 12.5
+      "replied": 3,
+      "replyRatePct": 18.8
     }
   ]
 }
