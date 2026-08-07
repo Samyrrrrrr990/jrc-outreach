@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T16:07:29.091Z",
+  "generatedAt": "2026-08-07T15:06:43.393Z",
   "windowDays": 30,
   "totals": {
     "contacts": 142,
@@ -44,26 +44,6 @@
     }
   },
   "daily": [
-    {
-      "date": "2026-07-07",
-      "sent": {
-        "profs": 0,
-        "sponsors": 0,
-        "students": 0
-      },
-      "replied": 0,
-      "bounced": 0
-    },
-    {
-      "date": "2026-07-08",
-      "sent": {
-        "profs": 0,
-        "sponsors": 0,
-        "students": 0
-      },
-      "replied": 0,
-      "bounced": 0
-    },
     {
       "date": "2026-07-09",
       "sent": {
@@ -336,6 +316,26 @@
     },
     {
       "date": "2026-08-05",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-08-06",
+      "sent": {
+        "profs": 0,
+        "sponsors": 0,
+        "students": 0
+      },
+      "replied": 0,
+      "bounced": 0
+    },
+    {
+      "date": "2026-08-07",
       "sent": {
         "profs": 0,
         "sponsors": 0,
