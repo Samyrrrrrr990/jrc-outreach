@@ -131,7 +131,7 @@ export const jrc: OrgProfile = {
       {
         category: "students",
         label: "UofT — Undergraduate Research Students' Association (URSA)",
-        url: "https://sop.utoronto.ca/group/uoft-undergraduate-research-students-association-uoft-ursa/",
+        url: "https://sop.utoronto.ca/group/copy-of-uoft-undergraduate-research-students-association-uoft-ursa/",
         org: "UofT URSA",
         defaultField: "undergraduate research",
         orgContact: true,
